@@ -9,67 +9,80 @@ namespace TestBed
 {
     class LogicalLayer : PhysicalDeviceInterface
     {
-        private PhysicalDevice _physicalDevice;
+        //The layer that actually communicates with the device
+        private PhysicalLayer _physicalLayer;
+        //Flag used to determine if a successful ping command was ever sent
         private bool _deviceConnected;
 
-        private AutoResetEvent _flashLEDSignal;
-        private AutoResetEvent _controlLEDSignal;
-        private AutoResetEvent _connectionSignal;
-
+        //The current state of the led on the physical device
         private bool _ledHigh;
 
 
-
-        public LogicalLayer(PhysicalDevice inPhysicalDevice)
+        /// <summary>
+        /// Creates the logical layer with a reference to the physical layer
+        /// </summary>
+        /// <param name="inPhysicalDevice">The physical layer object</param>
+        public LogicalLayer(PhysicalLayer inPhysicalLayer)
         {
-            _flashLEDSignal = new AutoResetEvent(false);
-            _controlLEDSignal = new AutoResetEvent(false);
-            _connectionSignal = new AutoResetEvent(false);
-
-            _physicalDevice = inPhysicalDevice;
+            _physicalLayer = inPhysicalLayer;
             _deviceConnected = false;
             _ledHigh = false;
         }
 
 
-
+        /// <summary>
+        /// Determines the current state of the LED and tells the physical layer to change
+        ///  that state
+        /// </summary>
         public void toggleLED_LL()
         {
             if (_deviceConnected)
             {
-                if (_ledHigh) { _physicalDevice.turnLEDOff_PL(); _ledHigh = false; }
-                else { _physicalDevice.turnLEDOn_PL(); _ledHigh = true; }
+                if (_ledHigh) { _physicalLayer.turnLEDOff_PL(); _ledHigh = false; }
+                else { _physicalLayer.turnLEDOn_PL(); _ledHigh = true; }
             }
             else Console.WriteLine("device is not connected, can not toggle");
         }
 
+        /// <summary>
+        /// Tells the physical layer to flash the led
+        /// </summary>
         public void flashLED_LL()
         {
             if (_deviceConnected)
             {
-                _physicalDevice.flashLED_PL();
+                _physicalLayer.flashLED_PL();
                 _ledHigh = true;
             }
             else Console.WriteLine("device is not connected, can not flash");
         }
 
+        /// <summary>
+        /// Tells the physical layer to change the state of the led to the 
+        /// state of the input parameter
+        /// </summary>
+        /// <param name="inIsHigh"></param>
         public void changeLEDState(bool inIsHigh)
         {
             if (inIsHigh)
             {
-                _physicalDevice.turnLEDOn_PL();
+                _physicalLayer.turnLEDOn_PL();
                 _ledHigh = true;
             }
             else
             {
-                _physicalDevice.turnLEDOff_PL();
+                _physicalLayer.turnLEDOff_PL();
                 _ledHigh = false;
             }
         }
 
+
+        /// <summary>
+        /// Tells the physical layer to ping the device
+        /// </summary>
         public void connectToDevice_LL()
         {
-            _physicalDevice.connectToDevice_PL();
+            _physicalLayer.connectToDevice_PL();
         }
 
 
@@ -80,10 +93,9 @@ namespace TestBed
         public void deviceConnected()
         {
             _deviceConnected = true;
-            _connectionSignal.Set();
         }
-        public void flashLEDSent(){_flashLEDSignal.Set();}
-        public void ledControlSent(){ _controlLEDSignal.Set();}
+        public void flashLEDSent(){}
+        public void ledControlSent(){}
 
 
 
@@ -92,16 +104,10 @@ namespace TestBed
 
 
         /************************************ Sequencer Methods *************************************************/
-        public bool waitForFlashLEDSent(int inMSToWait = 0)
-        {
-            if (inMSToWait == 0){_flashLEDSignal.WaitOne(); return true; }
-            else{  return _flashLEDSignal.WaitOne(inMSToWait);}
-        }
-
-        public bool waitForControlLEDSent(int inMSToWait = 0)
-        {
-            if (inMSToWait == 0) { _controlLEDSignal.WaitOne(); return true;}
-            else{ return _controlLEDSignal.WaitOne(inMSToWait);}
-        }
+        //public bool waitForFlashLEDSent(int inMSToWait = 0)
+        //{
+        //    if (inMSToWait == 0){_flashLEDSignal.WaitOne(); return true; }
+        //    else{  return _flashLEDSignal.WaitOne(inMSToWait);}
+        //}
     }
 }

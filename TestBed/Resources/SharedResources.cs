@@ -10,7 +10,11 @@ namespace TestBed
     //Identifiers for all the UI events this program will throw
     public enum UIEventIdentifier
     {
+        //Used for a superclass.  Should not use in your program
         GenericEvent,
+
+        //Used when various buttons are clicked.  Look at the 
+        //Ui and you can propably figure them out
         ConnectClicked,
         FlashLEDClicked,
         ToggleLEDClicked,

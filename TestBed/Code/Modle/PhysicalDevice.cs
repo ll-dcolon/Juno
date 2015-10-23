@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime;
 using System.IO.Ports;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,8 +13,19 @@ namespace TestBed
     /// </summary>
     public interface PhysicalDeviceInterface
     {
+        /// <summary>
+        /// Notifies the delegate when the device has been connected (when a successful ping has been received)
+        /// </summary>
         void deviceConnected();
+
+        /// <summary>
+        /// Notifies the delegate when the flashLED command has been successfully send
+        /// </summary>
         void flashLEDSent();
+
+        /// <summary>
+        /// Notifies the delegate when the ledControl message has been successfully sent
+        /// </summary>
         void ledControlSent();
     }
 
@@ -24,7 +34,7 @@ namespace TestBed
 
 
 
-    class PhysicalDevice
+    class PhysicalLayer
     {
 
         //The port used to communicate with the serial device
@@ -43,8 +53,10 @@ namespace TestBed
         private PhysicalDeviceInterface deviceDelegate;
 
 
-
-        public PhysicalDevice()
+        /// <summary>
+        /// Creates a new physical device object and attempt to open the serial port
+        /// </summary>
+        public PhysicalLayer()
         {
             _lockDeviceComm = new object();
             _enqueueEvent = new AutoResetEvent(false);
@@ -54,6 +66,11 @@ namespace TestBed
         }
 
 
+        /// <summary>
+        /// Attempts to open the serial port and communicate with the device
+        /// 
+        /// Current defaults are set to COM3 and 9600 BaudRate
+        /// </summary>
         private void findSerialDevice()
         {
 
@@ -73,20 +90,29 @@ namespace TestBed
         }
 
 
-
+        /// <summary>
+        /// Sets teh physical device delegate
+        /// </summary>
+        /// <param name="inDelegate">The object that wants to receive messages from the physical device object</param>
         public void setDelegate(PhysicalDeviceInterface inDelegate)
         {
             deviceDelegate = inDelegate;
         }
 
 
+        //Wrappers around the sendMessage function.  A parameter to the sendMessage function are the actual bytes to send
+        //This is where you can see what bytes im sending for what commands
         public void connectToDevice_PL() { sendMessage(DeviceMessageIdentifier.PingDevice, buildMessage(new List<int> { 0x02, 0x27 })); }
         public void flashLED_PL() { sendMessage(DeviceMessageIdentifier.FlashLED, buildMessage(new List<int> {0x02, 0x28 })); }
         public void turnLEDOn_PL() { sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x00 })); }
         public void turnLEDOff_PL() { sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x01 })); }
 
 
-
+        /// <summary>
+        /// Helper method used to combine the byte list into a string to send to sendMessage function
+        /// </summary>
+        /// <param name="bytes">List<int> of the bytes to send</param>
+        /// <returns>A string version consisting of the character representation of the bytes sent in</returns>
         private string buildMessage(List<int> bytes)
         {
             StringBuilder sb = new StringBuilder();
@@ -98,10 +124,12 @@ namespace TestBed
         }
 
 
-
-
-
-
+        /// <summary>
+        /// Handles sending a message to the serial device.  It makes sure the port is still open, locks the
+        /// serial object, sends the message, and waits for a responce if necessary.  
+        /// </summary>
+        /// <param name="inMessageIdentifier">The type of message I am sending</param>
+        /// <param name="inMessageToSend">The string to send</param>
         private void sendMessage(DeviceMessageIdentifier inMessageIdentifier, string inMessageToSend)
         {
             if (_serialPort.IsOpen)
@@ -137,10 +165,14 @@ namespace TestBed
         }
 
 
+        /// <summary>
+        /// Waits for the responce from the device.  Will timeout after 1 second.
+        /// </summary>
+        /// <param name="inNumBytesToReceivce">The number of bytes that we expect to get from the queue</param>
+        /// <param name="outResponce">The string to fill with the responce taken from the queue</param>
+        /// <returns>True if we got a responce of the correct length</returns>
         private bool waitForResponce(int inNumBytesToReceivce, ref string outResponce)
         {
-            while (true)
-            {
                 if (_enqueueEvent.WaitOne(1000))
                 {
                     _incommingStringQueue.TryDequeue(out outResponce);
@@ -161,10 +193,19 @@ namespace TestBed
                     Console.WriteLine("Did not receive a responce after .5 seconds");
                     return false;
                 }
-            }
         }
 
 
+
+        /// <summary>
+        /// Looks over the responce received from the device and tries to process it
+        /// 
+        /// Will continue until processing is complete.  This is the same thread that sent the message.
+        /// Try to limit processing as much as possible.  May eventually need to have another queue / processing thread.
+        /// For now thougn, we keep it simple
+        /// </summary>
+        /// <param name="inMessageIdentifier">The message type we are sending</param>
+        /// <param name="inResponce">The responce we recieved from the device</param>
         private void processResponce(DeviceMessageIdentifier inMessageIdentifier, string inResponce)
         {
             switch (inMessageIdentifier)
@@ -184,6 +225,11 @@ namespace TestBed
         }
 
 
+        /// <summary>
+        /// Determines the expected responce length given the message type
+        /// </summary>
+        /// <param name="inDeviceMessage">The type of message we are going to send</param>
+        /// <returns>The number of bytes (as a string) we expect to receive from the device</returns>
         private int getResponceLength(DeviceMessageIdentifier inDeviceMessage)
         {
             switch (inDeviceMessage)
@@ -207,6 +253,11 @@ namespace TestBed
         }
 
 
+        /// <summary>
+        /// Used for all commands that dont expect a responce from the device.  This lets the physical layer still
+        /// notify the logical layer that the message has been successfuly sent.
+        /// </summary>
+        /// <param name="inDeviceMessage">The type of message we sent</param>
         public void sendCommandFinishedNotification(DeviceMessageIdentifier inDeviceMessage)
         {
             switch (inDeviceMessage)
@@ -235,20 +286,21 @@ namespace TestBed
 
 
 
-
-
-
-
-
-
-
+        /// <summary>
+        /// Recieve string from the device and put it into the queue for another thread.
+        /// 
+        /// Only allowed to recieve a responce when the _canReceiveResponce flag is set.  It is set right before
+        /// sending a message and then cleared right after the message is received.  This means I can currently
+        /// not receive message initiated by the device.  For now thats fine, may need to change in the future
+        /// </summary>
+        /// <param name="sender">The serial port object that recieved the data</param>
+        /// <param name="e">SerialDataReceivedEventArgs</param>
         private void _serialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             if (!_canReceiveResponce)
             {
                 Console.WriteLine("ERROR - Received responce when should not have");
             }
-
             try
             {
                 SerialPort port = (SerialPort)sender;

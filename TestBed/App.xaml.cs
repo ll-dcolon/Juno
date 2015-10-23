@@ -15,7 +15,7 @@ namespace TestBed
     {
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            //Create UI handle to catch all UI events
+            //Set up all the objects and delegates necesary to run the program
             PhysicalDevice physicalDevice = new PhysicalDevice();
             LogicalLayer logicalLayer = new LogicalLayer(physicalDevice);
             physicalDevice.setDelegate(logicalLayer);
@@ -24,8 +24,6 @@ namespace TestBed
             MainWindow wnd = new MainWindow();
             wnd.setDelegate(uiHandle);
             wnd.Show();
-
-
         }
     }
 }

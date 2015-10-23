@@ -63,19 +63,35 @@ namespace TestBed
     }
 
 
-
+    /// <summary>
+    /// Represents the event when the Flash LED button is clicked
+    /// </summary>
     class FlashLEDUIEvent : UIEvent
     {
+        /// <summary>
+        /// Creates the FlashLEDUIEvent and sets its identifier
+        /// </summary>
         public FlashLEDUIEvent()
         {
             identifier = UIEventIdentifier.FlashLEDClicked;
         }
     }
 
+
+    /// <summary>
+    /// Represents the event when the user clicks one of the 
+    /// LED change state buttons (On, Off)
+    /// </summary>
     class ChangeLEDStateUIEvent : UIEvent
     {
+        // The state we want to the LED to be in
+        //true = high, false = low
         public bool _isHigh;
 
+        /// <summary>
+        /// Creates the object, sets the identifier, and remembers the desired state
+        /// </summary>
+        /// <param name="inIsHigh">The state we want the LED to be in</param>
         public ChangeLEDStateUIEvent(bool inIsHigh)
         {
             identifier = UIEventIdentifier.ChangeLEDStateClicked;

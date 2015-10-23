@@ -21,9 +21,8 @@ namespace TestBed
     /// </summary>
     public partial class MainWindow : Window
     {
-        
-        private UIEventInterface uiDelegate;
-
+        //Used to let another object know when UI events happen        
+        private UIEventInterface _uiDelegate;
 
         public MainWindow()
         {
@@ -31,40 +30,52 @@ namespace TestBed
         }
 
 
+        /// <summary>
+        /// Sets the UI delegate to the supplied object
+        /// </summary>
+        /// <param name="inDelegate"></param>
         public void setDelegate(UIEventInterface inDelegate)
         {
-            uiDelegate = inDelegate;
+            _uiDelegate = inDelegate;
         }
 
 
+
+
+
+
+        //Methods called when various buttons are clicked
+        //General strategy is enqueue the event with the delegate and then get 
+        //back to listening for events
+        /************************************************************************************************************************/
         private void connectButton_Click(object sender, RoutedEventArgs e)
         {
             ConnectUIEvent clickTarget = new ConnectUIEvent();
-            uiDelegate.enqueueUIEvent(clickTarget);
+            if(_uiDelegate != null)_uiDelegate.enqueueUIEvent(clickTarget);
         }
 
         private void flashLEDButton_Click(object sender, RoutedEventArgs e)
         {
             FlashLEDUIEvent clickTarget = new FlashLEDUIEvent();
-            uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
         }
 
         private void turnOnLEDButton_Click(object sender, RoutedEventArgs e)
         {
             ChangeLEDStateUIEvent clickTarget = new ChangeLEDStateUIEvent(true);
-            uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
         }
 
         private void turnOffLEDButton_Click(object sender, RoutedEventArgs e)
         {
             ChangeLEDStateUIEvent clickTarget = new ChangeLEDStateUIEvent(false);
-            uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
         }
 
         private void toggleLEDButton_Click(object sender, RoutedEventArgs e)
         {
             ToggleLEDUIEvent clickTarget = new ToggleLEDUIEvent();
-            uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
         }
     }
 }

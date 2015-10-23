@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Diagnostics;
 using System.Threading;
 
 namespace TestBed
@@ -32,7 +27,7 @@ namespace TestBed
     /// </summary>
     class UIHandle_LLSL : UIEventInterface
     {
-        // Thread same queue to hold all UIEvents
+        // Thread safe queue to hold all UIEvents
         private ConcurrentQueue<UIEvent> _eventQueue;
         //Thread that processes the queue
         private Thread _queueProcessingThread;
@@ -44,13 +39,14 @@ namespace TestBed
 
         //Logical layer used to send messages to the device
         private LogicalLayer _logicalLayer;
-        
+
 
 
 
         /// <summary>
         /// Create the new UIHandle_LLSL and give it a new queue
         /// </summary>
+        /// <param name="inLogicalLayer">Logical Layer, used to send UI messages to the device</param>
         public UIHandle_LLSL(LogicalLayer inLogicalLayer)
         {
             _eventQueue = new ConcurrentQueue<UIEvent>();
@@ -141,9 +137,8 @@ namespace TestBed
             }
         }
 
-
-
-
+        
+        //Handle the events by passing calls onto the logical layer
         private void handleConnectClickedEvent(){ _logicalLayer.connectToDevice_LL(); }
         private void handleToggleLEDClickedEvent(){ _logicalLayer.toggleLED_LL(); }
         private void handleFlashLEDClickedEvent() { _logicalLayer.flashLED_LL(); }
