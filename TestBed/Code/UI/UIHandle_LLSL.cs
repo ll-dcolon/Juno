@@ -131,6 +131,11 @@ namespace TestBed
                         bool ledIsHigh = changeLEDEvent._isHigh;
                         handleChangeLEDStateClickedEvent(ledIsHigh);
                         break;
+                    case UIEventIdentifier.ToggleOutputClicked:
+                        ToggleOutputUIEvent toggleOutputEvent = (ToggleOutputUIEvent)newEvent;
+                        DIOPins pinToToggle = toggleOutputEvent._pinToToggle;
+                        handleToggleOutputClickedEvent(pinToToggle);
+                        break;
                     default:
                         break;
                 }
@@ -143,6 +148,7 @@ namespace TestBed
         private void handleToggleLEDClickedEvent(){ _logicalLayer.toggleLED_LL(); }
         private void handleFlashLEDClickedEvent() { _logicalLayer.flashLED_LL(); }
         private void handleChangeLEDStateClickedEvent(bool isHigh) { _logicalLayer.changeLEDState(isHigh); }
+        private void handleToggleOutputClickedEvent(DIOPins pinToToggle) { _logicalLayer.toggleOutput(pinToToggle); }
 
 
 

@@ -77,5 +77,30 @@ namespace TestBed
             ToggleLEDUIEvent clickTarget = new ToggleLEDUIEvent();
             if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
         }
+
+
+        //Uses the combo box to determine what output you want to toggle
+        private void toggleOutput_Click(object sender, RoutedEventArgs e)
+        {
+            String targetOutput = dioSelector.Text;
+            DIOPins pinToToggle;
+            switch (targetOutput)
+            {
+                case "Heater (RA4) (White)":
+                    pinToToggle = DIOPins.Heater_RA4;
+                    break;
+                case "Air Pump (RB6) (Green)":
+                    pinToToggle = DIOPins.AirPump_RB6;
+                    break;
+                case "Water Pump (RB7) (Red)":
+                    pinToToggle = DIOPins.WaterPump_RB7;
+                    break;
+                default:
+                    Console.WriteLine("Do not recognize the selected IO in the combo box");
+                    return;
+            }
+            ToggleOutputUIEvent clickTarget = new ToggleOutputUIEvent(pinToToggle);
+            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
+        }
     }
 }

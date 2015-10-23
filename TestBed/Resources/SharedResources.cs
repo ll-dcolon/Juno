@@ -18,7 +18,8 @@ namespace TestBed
         ConnectClicked,
         FlashLEDClicked,
         ToggleLEDClicked,
-        ChangeLEDStateClicked
+        ChangeLEDStateClicked,
+        ToggleOutputClicked
     };
 
 
@@ -33,6 +34,15 @@ namespace TestBed
         RelayControl,
         DigitalIControl,
         DigitalOControl
+    };
+
+
+    //The names that we will give various pins
+    public enum DIOPins
+    {
+        Heater_RA4 = 0x0E,
+        AirPump_RB6 = 0x13,
+        WaterPump_RB7 = 0x12
     };
 
 

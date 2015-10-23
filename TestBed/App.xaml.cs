@@ -16,9 +16,9 @@ namespace TestBed
         private void Application_Startup(object sender, StartupEventArgs e)
         {
             //Set up all the objects and delegates necesary to run the program
-            PhysicalDevice physicalDevice = new PhysicalDevice();
-            LogicalLayer logicalLayer = new LogicalLayer(physicalDevice);
-            physicalDevice.setDelegate(logicalLayer);
+            PhysicalLayer physicalLayer = new PhysicalLayer();
+            LogicalLayer logicalLayer = new LogicalLayer(physicalLayer);
+            physicalLayer.setDelegate(logicalLayer);
             UIHandle_LLSL uiHandle = new UIHandle_LLSL(logicalLayer);
             SequencerLayer sequencer = new SequencerLayer(uiHandle, logicalLayer);
             MainWindow wnd = new MainWindow();

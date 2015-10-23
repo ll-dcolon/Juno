@@ -87,6 +87,25 @@ namespace TestBed
                 Console.WriteLine("Could not connect to the device");
                 throw;
             }
+
+            InitializeDevice();
+        }
+
+
+        /// <summary>
+        /// Sets the initial state of the physical device
+        /// </summary>
+        private void InitializeDevice()
+        {
+            //Set the state of all the digital outputs to be low
+            //These states must match the initial state of the pin dictionary in the logical layer
+            //If you change something here, make sure you change it there too
+            //RA4
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, 0x0E, 0x00, 0x01 }));
+            //RB7
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, 0x12, 0x00, 0x01 }));
+            //RB6
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, 0x13, 0x00, 0x01 }));
         }
 
 
@@ -106,6 +125,13 @@ namespace TestBed
         public void flashLED_PL() { sendMessage(DeviceMessageIdentifier.FlashLED, buildMessage(new List<int> {0x02, 0x28 })); }
         public void turnLEDOn_PL() { sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x00 })); }
         public void turnLEDOff_PL() { sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x01 })); }
+        public void setOutputState(DIOPins pinToSet, bool shouldBeHigh)
+        {
+            int newPinState;
+            if (shouldBeHigh) newPinState = 0x01;
+            else newPinState = 0x00;
+            sendMessage(DeviceMessageIdentifier.DigitalOControl, buildMessage(new List<int> { 0x05, 0x35, (int)pinToSet, 0x00, newPinState }));
+        }
 
 
         /// <summary>

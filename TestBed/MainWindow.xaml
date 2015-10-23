@@ -26,5 +26,12 @@
         <Button x:Name="turnOnLEDButton" Content="Turn LED On" HorizontalAlignment="Left" Margin="38,171,0,0" VerticalAlignment="Top" Width="75" Grid.ColumnSpan="2" Click="turnOnLEDButton_Click"/>
         <Button x:Name="turnOffLEDButton" Content="Turn LED Off" HorizontalAlignment="Left" Margin="38,196,0,0" VerticalAlignment="Top" Width="75" Grid.ColumnSpan="2" Click="turnOffLEDButton_Click"/>
         <TextBlock x:Name="textBlock1" HorizontalAlignment="Left" Margin="48,91,0,0" TextWrapping="Wrap" Text="Board LED" VerticalAlignment="Top" Width="57" Grid.ColumnSpan="2"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="48" Margin="57,82,0,0" Stroke="Black" VerticalAlignment="Top" Width="315" Grid.Column="1"/>
+        <Button x:Name="toggleOutput" Content="Toggle Output" Grid.Column="1" HorizontalAlignment="Left" Margin="65,94,0,0" VerticalAlignment="Top" Width="93" Height="22" Click="toggleOutput_Click"/>
+        <ComboBox x:Name="dioSelector" HorizontalAlignment="Left" VerticalAlignment="Top" Width="177" Grid.Column="1" Margin="174,94,0,0">
+            <TextBlock x:Name="textBlock_Copy" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Heater (RA4) (White)" VerticalAlignment="Top"/>
+            <TextBlock x:Name="textBlock" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Air Pump (RB6) (Green)" VerticalAlignment="Top" Width="135"/>
+            <TextBlock x:Name="textBlock_Copy1" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Water Pump (RB7) (Red)" VerticalAlignment="Top"/>
+        </ComboBox>
     </Grid>
 </Window>

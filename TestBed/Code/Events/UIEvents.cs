@@ -98,4 +98,26 @@ namespace TestBed
             _isHigh = inIsHigh;
         }
     }
+
+
+
+    /// <summary>
+    /// Represents the event when the toggle output button is clicked
+    /// Also holds the output we want to toggle
+    /// </summary>
+    class ToggleOutputUIEvent : UIEvent
+    {
+        //The output we want to toggle
+        public DIOPins _pinToToggle;
+
+        /// <summary>
+        /// Creates a ToggleOutputUIEvent and sets its identifier to the correct value
+        /// Also saves the pin id to toggle
+        /// </summary>
+        public ToggleOutputUIEvent(DIOPins inPinToToggle)
+        {
+            identifier = UIEventIdentifier.ToggleOutputClicked;
+            _pinToToggle = inPinToToggle;
+        }
+    }
 }
