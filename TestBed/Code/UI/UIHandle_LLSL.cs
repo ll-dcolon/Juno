@@ -132,8 +132,8 @@ namespace TestBed
                         break;
                     case UIEventIdentifier.ChangeLEDStateClicked:
                         ChangeLEDStateUIEvent changeLEDEvent = (ChangeLEDStateUIEvent)newEvent;
-
-                        handleChangeLEDStateClickedEvent((ChangeLEDStateUIEvent)newEvent._isHigh);
+                        bool ledIsHigh = changeLEDEvent._isHigh;
+                        handleChangeLEDStateClickedEvent(ledIsHigh);
                         break;
                     default:
                         break;
@@ -147,7 +147,7 @@ namespace TestBed
         private void handleConnectClickedEvent(){ _logicalLayer.connectToDevice_LL(); }
         private void handleToggleLEDClickedEvent(){ _logicalLayer.toggleLED_LL(); }
         private void handleFlashLEDClickedEvent() { _logicalLayer.flashLED_LL(); }
-        private void handleCHangeLEDStateClickedEvent(bool isHigh) { _logicalLayer.turnLEDOff_LL(); }
+        private void handleChangeLEDStateClickedEvent(bool isHigh) { _logicalLayer.changeLEDState(isHigh); }
 
 
 

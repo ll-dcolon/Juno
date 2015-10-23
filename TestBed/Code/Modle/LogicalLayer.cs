@@ -45,20 +45,26 @@ namespace TestBed
 
         public void flashLED_LL()
         {
-            if (_deviceConnected) _physicalDevice.flashLED_PL();
+            if (_deviceConnected)
+            {
+                _physicalDevice.flashLED_PL();
+                _ledHigh = true;
+            }
             else Console.WriteLine("device is not connected, can not flash");
         }
 
-        public void turnLEDOn_LL()
+        public void changeLEDState(bool inIsHigh)
         {
-            if (_deviceConnected) { _physicalDevice.turnLEDOn_PL(); _ledHigh = true; }
-            else Console.WriteLine("device is not connected, can not turn led on");
-        }
-
-        public void turnLEDOff_LL()
-        {
-            if (_deviceConnected) { _physicalDevice.turnLEDOff_PL(); _ledHigh = false; }
-            else Console.WriteLine("device is not connected, can not turn led off");
+            if (inIsHigh)
+            {
+                _physicalDevice.turnLEDOn_PL();
+                _ledHigh = true;
+            }
+            else
+            {
+                _physicalDevice.turnLEDOff_PL();
+                _ledHigh = false;
+            }
         }
 
         public void connectToDevice_LL()

@@ -141,7 +141,7 @@ namespace TestBed
         {
             while (true)
             {
-                if (_enqueueEvent.WaitOne(500))
+                if (_enqueueEvent.WaitOne(1000))
                 {
                     _incommingStringQueue.TryDequeue(out outResponce);
                     if (outResponce.Length == inNumBytesToReceivce)
@@ -158,7 +158,7 @@ namespace TestBed
                 }
                 else
                 {
-                    Console.WriteLine("Did not receive a responce after .2 seconds");
+                    Console.WriteLine("Did not receive a responce after .5 seconds");
                     return false;
                 }
             }
