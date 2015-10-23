@@ -37,6 +37,9 @@ namespace TestBed
         //Used to notify the pprocessing thread when there is a new element to process
         private AutoResetEvent _enqueueEvent;
 
+        //Notifies the sequencer that it should start the test sequence
+        private AutoResetEvent _startTestSequenceEvent;
+
         //Logical layer used to send messages to the device
         private LogicalLayer _logicalLayer;
 
@@ -56,6 +59,7 @@ namespace TestBed
             _shouldStop= false;
 
             _enqueueEvent = new AutoResetEvent(false);
+            _startTestSequenceEvent = new AutoResetEvent(false);
 
             _logicalLayer = inLogicalLayer;
         }
@@ -136,6 +140,9 @@ namespace TestBed
                         DIOPins pinToToggle = toggleOutputEvent._pinToToggle;
                         handleToggleOutputClickedEvent(pinToToggle);
                         break;
+                    case UIEventIdentifier.StartTestSequencerClicked:
+                        handleStartTestSequencerClickedEvent();
+                        break;
                     default:
                         break;
                 }
@@ -150,6 +157,8 @@ namespace TestBed
         private void handleChangeLEDStateClickedEvent(bool isHigh) { _logicalLayer.changeLEDState(isHigh); }
         private void handleToggleOutputClickedEvent(DIOPins pinToToggle) { _logicalLayer.toggleOutput(pinToToggle); }
 
+        private void handleStartTestSequencerClickedEvent() { _startTestSequenceEvent.Set(); }
+
 
 
 
@@ -157,5 +166,11 @@ namespace TestBed
 
 
         //*************************************** Sequencer Methods **********************************************//
+        public bool waitForStartTestSequenceClicked(int inMSToWait = 0)
+        {
+            if (inMSToWait == 0){_startTestSequenceEvent.WaitOne(); return true; }
+            else{  return _startTestSequenceEvent.WaitOne(inMSToWait);}
+        }
+
     }
 }

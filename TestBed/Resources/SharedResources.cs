@@ -19,7 +19,9 @@ namespace TestBed
         FlashLEDClicked,
         ToggleLEDClicked,
         ChangeLEDStateClicked,
-        ToggleOutputClicked
+        ToggleOutputClicked,
+        StartTestSequencerClicked
+        
     };
 
 

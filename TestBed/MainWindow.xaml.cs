@@ -102,5 +102,15 @@ namespace TestBed
             ToggleOutputUIEvent clickTarget = new ToggleOutputUIEvent(pinToToggle);
             if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
         }
+
+
+        /// <summary>
+        /// Tells the UIHandle to start the test sequencer
+        /// </summary>
+        private void startTestSequencerButton_Click(object sender, RoutedEventArgs e)
+        {
+            StartTestSequencerUIEvent clickTarget = new StartTestSequencerUIEvent();
+            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
+        }
     }
 }

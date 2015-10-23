@@ -120,4 +120,16 @@ namespace TestBed
             _pinToToggle = inPinToToggle;
         }
     }
+
+
+    /// <summary>
+    /// Represents the event which starts the test sequencer
+    /// </summary>
+    class StartTestSequencerUIEvent : UIEvent
+    {
+        public StartTestSequencerUIEvent()
+        {
+            identifier = UIEventIdentifier.StartTestSequencerClicked;
+        }
+    }
 }

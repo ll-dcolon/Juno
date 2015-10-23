@@ -125,6 +125,20 @@ namespace TestBed
         }
 
 
+        /// <summary>
+        /// Lets you control the outputs
+        /// </summary>
+        /// <param name="pinToChange">The pin you want to change the state of</param>
+        /// <param name="inShouldSetHigh">The state you want the pin to take.  True = high, false = low</param>
+        public void controlOutput(DIOPins pinToChange, bool inShouldSetHigh)
+        {
+            bool oldValue;
+            _pinStates.TryGetValue(pinToChange, out oldValue);
+            _physicalLayer.setOutputState(pinToChange, inShouldSetHigh);
+            _pinStates.TryUpdate(pinToChange, inShouldSetHigh, oldValue);
+        }
+
+
 
 
 
