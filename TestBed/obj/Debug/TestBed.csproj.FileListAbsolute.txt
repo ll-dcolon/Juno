@@ -1,0 +1,16 @@
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\TestBed.csprojResolveAssemblyReference.cache
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\MainWindow.g.cs
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\App.g.cs
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\TestBed_MarkupCompile.cache
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\TestBed_MarkupCompile.lref
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\bin\Debug\TestBed.exe.config
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\bin\Debug\TestBed.exe
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\bin\Debug\TestBed.pdb
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\MainWindow.baml
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\TestBed.g.resources
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\TestBed.Properties.Resources.resources
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\TestBed.csproj.GenerateResource.Cache
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\TestBed.exe
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\obj\Debug\TestBed.pdb
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\bin\Debug\System.Runtime.WindowsRuntime.dll
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\TestBed\bin\Debug\System.Runtime.WindowsRuntime.xml
