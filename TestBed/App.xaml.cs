@@ -13,10 +13,17 @@ namespace TestBed
     /// </summary>
     public partial class App : Application
     {
+        //config file location
+        private string configFile = @"C:\vault\TestBed\Config\testBedConfig.json";
+
+
         private void Application_Startup(object sender, StartupEventArgs e)
         {
+            //Get the config file
+            SystemConfig systemConfig = new SystemConfig(configFile);
+
             //Set up all the objects and delegates necesary to run the program
-            PhysicalLayer physicalLayer = new PhysicalLayer();
+            PhysicalLayer physicalLayer = new PhysicalLayer(systemConfig.getDeviceConfig());
             LogicalLayer logicalLayer = new LogicalLayer(physicalLayer);
             physicalLayer.setDelegate(logicalLayer);
             UIHandle_LLSL uiHandle = new UIHandle_LLSL(logicalLayer);

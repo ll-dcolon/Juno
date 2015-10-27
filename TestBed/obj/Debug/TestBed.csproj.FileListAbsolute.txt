@@ -30,3 +30,5 @@ C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Debu
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Debug\TestBed.g.resources
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Debug\TestBed.Properties.Resources.resources
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Debug\TestBed.csproj.GenerateResource.Cache
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Debug\Newtonsoft.Json.dll
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Debug\Newtonsoft.Json.xml

@@ -39,6 +39,8 @@ namespace TestBed
 
         //The port used to communicate with the serial device
         private SerialPort _serialPort;
+        //The configuration object used for the device
+        private DeviceConfig _deviceConfig;
         //Buffer used to hold incoming bytes until they can be parsed
         private ConcurrentQueue<string> _incommingStringQueue;
         //Used to lock communication with the device
@@ -56,8 +58,9 @@ namespace TestBed
         /// <summary>
         /// Creates a new physical device object and attempt to open the serial port
         /// </summary>
-        public PhysicalLayer()
+        public PhysicalLayer(DeviceConfig inDeviceConfig)
         {
+            _deviceConfig = inDeviceConfig;
             _lockDeviceComm = new object();
             _enqueueEvent = new AutoResetEvent(false);
             _incommingStringQueue = new ConcurrentQueue<string>();
@@ -75,8 +78,8 @@ namespace TestBed
         {
 
             _serialPort = new SerialPort();
-            _serialPort.PortName = "COM3";
-            _serialPort.BaudRate = 9600;  //!@#Make these not hard coded.  Config file would be best
+            _serialPort.PortName = _deviceConfig.getDevicePort();
+            _serialPort.BaudRate = _deviceConfig.getBaudRate();  //!@#Make these not hard coded.  Config file would be best
             _serialPort.DataReceived += new SerialDataReceivedEventHandler(_serialPort_DataReceived);
             try
             {
@@ -85,7 +88,8 @@ namespace TestBed
             catch (Exception)
             {
                 Console.WriteLine("Could not connect to the device");
-                throw;
+                return;
+                
             }
 
             InitializeDevice();
