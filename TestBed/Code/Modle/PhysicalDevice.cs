@@ -34,7 +34,7 @@ namespace TestBed
 
 
 
-    class PhysicalLayer
+    public class PhysicalLayer
     {
 
         //The port used to communicate with the serial device
