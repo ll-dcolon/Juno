@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
+[assembly: log4net.Config.XmlConfigurator(Watch = true)]
+
 namespace TestBed
 {
     /// <summary>
@@ -13,12 +15,16 @@ namespace TestBed
     /// </summary>
     public partial class App : Application
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger
+            (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         //config file location
         private string configFile = @"C:\vault\TestBed\Config\testBedConfig.json";
 
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
+            log.Info("This is the first log");
             //Get the config file
             SystemConfig systemConfig = new SystemConfig(configFile);
 
