@@ -11,6 +11,10 @@ namespace TestBed
 {
     class SequencerLayer
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger
+            (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        //Objects that aid in sequencer control by providing waitFor___ methods
         private UIHandle_LLSL _uiHandler;
         private LogicalLayer _logicalLayer;
 
@@ -19,13 +23,21 @@ namespace TestBed
         //Flag to stop the processing thread;
         private volatile bool _shouldStop;
 
+        //Thread used for the basic sequencer testing
         private Thread _testSequencerThread;
 
 
 
 
+        /// <summary>
+        /// Creates a new sequencer with a reference to the UIHandle and logicalLayer objects
+        /// This object is responsible for organizing the timing of all events
+        /// </summary>
+        /// <param name="inUIHandler">Reference to the UIHandler</param>
+        /// <param name="inLogicalLayer">Reference to the logical layer</param>
         public SequencerLayer(UIHandle_LLSL inUIHandler, LogicalLayer inLogicalLayer)
         {
+            log.Debug(string.Format("Creating sequencer:{0} with logicalLayer:{1} and UIHandler:{2}", this, inLogicalLayer, inUIHandler));
             _uiHandler = inUIHandler;
             _logicalLayer = inLogicalLayer;
             _shouldStop = false;
@@ -37,11 +49,13 @@ namespace TestBed
         /// </summary>
         ~SequencerLayer()
         {
+            log.Debug(string.Format("Destroying sequencer:{0}", this));
             this.requestStop();
         }
 
         private void startSequencerThreads()
         {
+            log.Debug("Starting sequencer threads");
             _testSequencerThread = new Thread(this.testSequencer);
             _testSequencerThread.Name = "testSequencerThread";
             _testSequencerThread.Start();
@@ -52,6 +66,7 @@ namespace TestBed
         /// </summary>
         public void requestStop()
         {
+            log.Debug("Requesting sequencer stop");
             _shouldStop = true;
             _testSequencerThread.Join();
         }
@@ -94,58 +109,81 @@ namespace TestBed
             while (!_shouldStop)
             {
                 _uiHandler.waitForStartTestSequenceClicked();
+                log.Info(string.Format("Running test sequener with a {0} ms delay metween commands", msToDelay));
+                log.Debug("TS - Connecting to device");
                 _logicalLayer.connectToDevice_LL();
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Turning off all the outputs");
                 _logicalLayer.controlOutput(DIOPins.Heater_RA4, true);
                 _logicalLayer.controlOutput(DIOPins.AirPump_RB6, true);
                 _logicalLayer.controlOutput(DIOPins.WaterPump_RB7, true);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Flashing the main LED");
                 _logicalLayer.flashLED_LL();
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle the main led");
                 _logicalLayer.toggleLED_LL();
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RA4");
                 _logicalLayer.toggleOutput(DIOPins.Heater_RA4);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RA4 again");
                 _logicalLayer.toggleOutput(DIOPins.Heater_RA4);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB7");
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_RB7);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB7 again");
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_RB7);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB6");
                 _logicalLayer.toggleOutput(DIOPins.AirPump_RB6);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB6 again");
                 _logicalLayer.toggleOutput(DIOPins.AirPump_RB6);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB6 and RA4");
                 _logicalLayer.toggleOutput(DIOPins.AirPump_RB6);
                 _logicalLayer.toggleOutput(DIOPins.Heater_RA4);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB7");
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_RB7);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB6");
                 _logicalLayer.toggleOutput(DIOPins.AirPump_RB6);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB7");
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_RB7);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RA4");
                 _logicalLayer.toggleOutput(DIOPins.Heater_RA4);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RA4");
                 _logicalLayer.toggleOutput(DIOPins.Heater_RA4);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB7");
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_RB7);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RB6");
                 _logicalLayer.toggleOutput(DIOPins.AirPump_RB6);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RA4, RB6, RB7");
                 _logicalLayer.toggleOutput(DIOPins.Heater_RA4);
                 _logicalLayer.toggleOutput(DIOPins.AirPump_RB6);
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_RB7);
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RA4, RB6, RB7, and LED");
                 _logicalLayer.toggleOutput(DIOPins.Heater_RA4);
                 _logicalLayer.toggleOutput(DIOPins.AirPump_RB6);
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_RB7);
                 _logicalLayer.toggleLED_LL();
                 Thread.Sleep(msToDelay);
+                log.Debug("TS - Toggle RA4, RB6, RB7, and LED again");
                 _logicalLayer.toggleOutput(DIOPins.Heater_RA4);
                 _logicalLayer.toggleOutput(DIOPins.AirPump_RB6);
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_RB7);
                 _logicalLayer.toggleLED_LL();
+                log.Info("Test sequencer finished successfully");
             }
 
         }

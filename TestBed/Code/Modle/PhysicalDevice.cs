@@ -36,6 +36,8 @@ namespace TestBed
 
     public class PhysicalLayer
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger
+            (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         //The port used to communicate with the serial device
         private SerialPort _serialPort;
@@ -60,6 +62,7 @@ namespace TestBed
         /// </summary>
         public PhysicalLayer(DeviceConfig inDeviceConfig)
         {
+            log.Debug(string.Format("Creating physicalLayer with config:{0}", inDeviceConfig));
             _deviceConfig = inDeviceConfig;
             _lockDeviceComm = new object();
             _enqueueEvent = new AutoResetEvent(false);
@@ -76,22 +79,22 @@ namespace TestBed
         /// </summary>
         private void findSerialDevice()
         {
-
+            log.Info(string.Format("Attempting to connect to serial port:{0} with baud rate:{1}", _deviceConfig.getDevicePort(), _deviceConfig.getBaudRate()));
             _serialPort = new SerialPort();
             _serialPort.PortName = _deviceConfig.getDevicePort();
             _serialPort.BaudRate = _deviceConfig.getBaudRate();  //!@#Make these not hard coded.  Config file would be best
             _serialPort.DataReceived += new SerialDataReceivedEventHandler(_serialPort_DataReceived);
             try
             {
+                log.Debug("Attempting to open serial port");
                 _serialPort.Open();
+                log.Debug("Opened serial port");
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Console.WriteLine("Could not connect to the device");
-                return;
-                
+                log.Fatal(string.Format("Could not open serial port:{0} with baud rate:{1}", _deviceConfig.getDevicePort(), _deviceConfig.getBaudRate()));
+                throw e; 
             }
-
             InitializeDevice();
         }
 
@@ -104,6 +107,7 @@ namespace TestBed
             //Set the state of all the digital outputs to be low
             //These states must match the initial state of the pin dictionary in the logical layer
             //If you change something here, make sure you change it there too
+            log.Debug("Setting the state of all the outputs");
             //RA4
             _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, 0x0E, 0x00, 0x01 }));
             //RB7
@@ -119,21 +123,43 @@ namespace TestBed
         /// <param name="inDelegate">The object that wants to receive messages from the physical device object</param>
         public void setDelegate(PhysicalDeviceInterface inDelegate)
         {
+            log.Debug(string.Format("Setting physical layer delegate to {0}", inDelegate));
             deviceDelegate = inDelegate;
         }
 
 
         //Wrappers around the sendMessage function.  A parameter to the sendMessage function are the actual bytes to send
         //This is where you can see what bytes im sending for what commands
-        public void connectToDevice_PL() { sendMessage(DeviceMessageIdentifier.PingDevice, buildMessage(new List<int> { 0x02, 0x27 })); }
-        public void flashLED_PL() { sendMessage(DeviceMessageIdentifier.FlashLED, buildMessage(new List<int> {0x02, 0x28 })); }
-        public void turnLEDOn_PL() { sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x00 })); }
-        public void turnLEDOff_PL() { sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x01 })); }
+        public void connectToDevice_PL()
+        {
+            log.Debug("Sending ping device message");
+            sendMessage(DeviceMessageIdentifier.PingDevice, buildMessage(new List<int> { 0x02, 0x27 }));
+        }
+
+        public void flashLED_PL()
+        {
+            log.Debug("Sending flash led message");
+            sendMessage(DeviceMessageIdentifier.FlashLED, buildMessage(new List<int> {0x02, 0x28 }));
+        }
+
+        public void turnLEDOn_PL()
+        {
+            log.Debug("Sending ledControl message to turn the led on");
+            sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x00 }));
+        }
+
+        public void turnLEDOff_PL()
+        {
+            log.Debug("Sending ledControl message to turn the led off");
+            sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x01 }));
+        }
+
         public void setOutputState(DIOPins pinToSet, bool shouldBeHigh)
         {
             int newPinState;
             if (shouldBeHigh) newPinState = 0x01;
             else newPinState = 0x00;
+            log.Debug(string.Format("Sending DigitalIOControl message to turn pin {0} to state {1}", (int)pinToSet, newPinState));
             sendMessage(DeviceMessageIdentifier.DigitalOControl, buildMessage(new List<int> { 0x05, 0x35, (int)pinToSet, 0x00, newPinState }));
         }
 
@@ -145,11 +171,13 @@ namespace TestBed
         /// <returns>A string version consisting of the character representation of the bytes sent in</returns>
         private string buildMessage(List<int> bytes)
         {
+            log.Debug(string.Format("Building message with bytes: {0}", bytes.ToString()));
             StringBuilder sb = new StringBuilder();
             foreach (int item in bytes)
             {
                 sb.Append((char)item);
             }
+            log.Debug(string.Format("Returning string message: {0}", sb.ToString()));
             return sb.ToString();
         }
 
@@ -162,9 +190,11 @@ namespace TestBed
         /// <param name="inMessageToSend">The string to send</param>
         private void sendMessage(DeviceMessageIdentifier inMessageIdentifier, string inMessageToSend)
         {
+            log.Debug("Attempting to send message to device");
             if (_serialPort.IsOpen)
             {
                 int numBytesInDeviceResponce = getResponceLength(inMessageIdentifier);
+                log.Debug(string.Format("Expecting {0} bytes from the device as a responce", numBytesInDeviceResponce));
                 lock(_lockDeviceComm)
                 {
                     _incommingStringQueue = new ConcurrentQueue<string>();
@@ -174,6 +204,7 @@ namespace TestBed
                     {
                         string responce = "";
                         bool receivedResponce = waitForResponce(numBytesInDeviceResponce, ref responce);
+                        log.Debug(string.Format("Received responce {0}", receivedResponce));
                         if (receivedResponce)
                         {
                             processResponce(inMessageIdentifier, responce);
@@ -181,6 +212,7 @@ namespace TestBed
                     }
                     else
                     {
+                        log.Debug(string.Format("Sending command finished notification for command: {0}", inMessageIdentifier));
                         sendCommandFinishedNotification(inMessageIdentifier);
                         _canReceiveResponce = false;
                     }
@@ -189,8 +221,8 @@ namespace TestBed
             }
             else
             {
-                //!@#Throw and exception
-                Console.WriteLine("ERROR : Can not send message when serial port is not open");
+                log.Fatal("Serial Port is not open!!!, killing the program");
+                throw new Exception();
             }
         }
 
@@ -203,26 +235,29 @@ namespace TestBed
         /// <returns>True if we got a responce of the correct length</returns>
         private bool waitForResponce(int inNumBytesToReceivce, ref string outResponce)
         {
-                if (_enqueueEvent.WaitOne(1000))
+            log.Debug("Waiting for responce from device");
+            int msToWait = 1000;
+            if (_enqueueEvent.WaitOne(msToWait))
+            {
+                _incommingStringQueue.TryDequeue(out outResponce);
+                log.Debug(string.Format("Received a responce from the device.  Responce: {0}", outResponce));
+                if (outResponce.Length == inNumBytesToReceivce)
                 {
-                    _incommingStringQueue.TryDequeue(out outResponce);
-                    if (outResponce.Length == inNumBytesToReceivce)
-                    {
-                        Console.WriteLine("Received responce of correct length.  " + outResponce);
-                        return true;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Received string " + outResponce + "But needed responce of length " + inNumBytesToReceivce);
-                        return false;
-                    }
-
+                    log.Debug(string.Format("Received responce of correct length. {0}",outResponce));
+                    return true;
                 }
                 else
                 {
-                    Console.WriteLine("Did not receive a responce after .5 seconds");
+                    log.Error(string.Format("Received responce string:{0} - with length {1} but expected a string of length {2}", outResponce, outResponce.Length, inNumBytesToReceivce));
                     return false;
                 }
+
+            }
+            else
+            {
+                log.Error(string.Format("Did not receive a responce in {0}ms", msToWait));
+                return false;
+            }
         }
 
 
@@ -238,10 +273,19 @@ namespace TestBed
         /// <param name="inResponce">The responce we recieved from the device</param>
         private void processResponce(DeviceMessageIdentifier inMessageIdentifier, string inResponce)
         {
+            log.Debug(string.Format("Processing responce from message {0}", inMessageIdentifier));
             switch (inMessageIdentifier)
             {
                 case DeviceMessageIdentifier.PingDevice:
-                    if (inResponce.Length == 1 && inResponce.ToCharArray()[0] == (char)0x59) { if (deviceDelegate != null) deviceDelegate.deviceConnected(); }
+                    if (inResponce.Length == 1 && inResponce.ToCharArray()[0] == (char)0x59)
+                    {
+                        log.Debug("Received correct value for pind message");
+                        if (deviceDelegate != null)
+                        {
+                            log.Debug("Sending device connected to the delegate");
+                            deviceDelegate.deviceConnected();
+                        }
+                    }
                     break;
                 case DeviceMessageIdentifier.DigitalIControl:
                 case DeviceMessageIdentifier.DigitalOControl:
@@ -249,7 +293,7 @@ namespace TestBed
                 case DeviceMessageIdentifier.LEDControl:
                 case DeviceMessageIdentifier.RelayControl:
                 default:
-                    Console.WriteLine("Message type " + inMessageIdentifier + "does not expect a responce");
+                    log.Error(string.Format("Message type {0} does not expect a responce", inMessageIdentifier));
                     break;
             }
         }
@@ -262,24 +306,25 @@ namespace TestBed
         /// <returns>The number of bytes (as a string) we expect to receive from the device</returns>
         private int getResponceLength(DeviceMessageIdentifier inDeviceMessage)
         {
+            int toReturn = 0;
+            log.Debug(string.Format("getting responce length for message type {0}", inDeviceMessage));
             switch (inDeviceMessage)
             {
                 case DeviceMessageIdentifier.PingDevice:
-                    return 1;
-                case DeviceMessageIdentifier.FlashLED:
-                    return 0;
-                case DeviceMessageIdentifier.LEDControl:
-                    return 0;
-                case DeviceMessageIdentifier.RelayControl:
-                    return 0;
                 case DeviceMessageIdentifier.DigitalIControl:
-                    return 1;
+                    toReturn = 1;
+                    break;
+                case DeviceMessageIdentifier.FlashLED:
+                case DeviceMessageIdentifier.LEDControl:
+                case DeviceMessageIdentifier.RelayControl:
                 case DeviceMessageIdentifier.DigitalOControl:
-                    return 0;
+                    break;
                 default:
-                    Console.WriteLine("Error : That message has not been implemented!!");
-                    return 0;
+                    log.Error(string.Format("Message type {0} has not been implemented", inDeviceMessage));
+                    break;
             }
+            log.Debug(string.Format("returning responce length:{0} for message type {1}", toReturn, inDeviceMessage));
+            return toReturn;
         }
 
 
@@ -290,23 +335,30 @@ namespace TestBed
         /// <param name="inDeviceMessage">The type of message we sent</param>
         public void sendCommandFinishedNotification(DeviceMessageIdentifier inDeviceMessage)
         {
+            if (deviceDelegate == null)
+            {
+                log.Error("Can not send command finished notification because the delegate is null");
+                return;
+            }
+
+            log.Debug(string.Format("Sending command finished notification for message type {0}", inDeviceMessage));
             switch (inDeviceMessage)
             {
 
                 case DeviceMessageIdentifier.FlashLED:
-                    if (deviceDelegate != null) deviceDelegate.flashLEDSent();
+                    deviceDelegate.flashLEDSent();
                     break;
                 case DeviceMessageIdentifier.LEDControl:
-                    if (deviceDelegate != null) deviceDelegate.ledControlSent();
+                    deviceDelegate.ledControlSent();
                     break;
                 case DeviceMessageIdentifier.RelayControl:
                 case DeviceMessageIdentifier.DigitalIControl:
                 case DeviceMessageIdentifier.DigitalOControl:
-                    Console.WriteLine("Not implemented these delegate methods yet");
+                    log.Error("Have not implemented these methods for device notifications");
                     break;
                 case DeviceMessageIdentifier.PingDevice:
                 default:
-                    Console.WriteLine("This message sends a responce and should not need these delegate messages");
+                    log.Error("This message should not need the device completed notification because it expects a responce from the device");
                     break;
             }
         }
@@ -329,20 +381,23 @@ namespace TestBed
         {
             if (!_canReceiveResponce)
             {
-                Console.WriteLine("ERROR - Received responce when should not have");
+                SerialPort port = (SerialPort)sender;
+                log.Fatal(string.Format("Received responce from device when should not have.  Responce:{0}", port.ReadExisting()));
+                throw new Exception();
             }
             try
             {
                 SerialPort port = (SerialPort)sender;
                 string read = port.ReadExisting();
-                Console.Write("Receive <<- " + read + "\n");
+                log.Debug(string.Format("Received string {0}", read));
                 _incommingStringQueue.Enqueue(read);
                 _enqueueEvent.Set();
 
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                Console.Write("ERROR");
+                log.Fatal("Received exception when trying to read from serial port", exception);
+                throw exception;
             }
         }
 

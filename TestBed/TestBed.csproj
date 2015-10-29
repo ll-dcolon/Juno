@@ -75,10 +75,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Code\Configuration\DeviceConfig.cs" />
-    <Compile Include="Code\Configuration\LoggerConfig.cs" />
     <Compile Include="Code\Configuration\SystemConfig.cs" />
-    <Compile Include="Code\Logger\Logger.cs" />
-    <Compile Include="Code\Logger\LoggerFactory.cs" />
     <Compile Include="Code\Modle\LogicalLayer.cs" />
     <Compile Include="Code\Modle\PhysicalDevice.cs" />
     <Compile Include="Code\Modle\SequencerLayer.cs" />

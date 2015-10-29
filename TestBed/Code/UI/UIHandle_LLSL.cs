@@ -27,6 +27,10 @@ namespace TestBed
     /// </summary>
     class UIHandle_LLSL : UIEventInterface
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger
+            (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+
         // Thread safe queue to hold all UIEvents
         private ConcurrentQueue<UIEvent> _eventQueue;
         //Thread that processes the queue
@@ -52,6 +56,7 @@ namespace TestBed
         /// <param name="inLogicalLayer">Logical Layer, used to send UI messages to the device</param>
         public UIHandle_LLSL(LogicalLayer inLogicalLayer)
         {
+            log.Debug(string.Format("Creating UIHandle__LLSL with logical layer: {0}", inLogicalLayer));
             _eventQueue = new ConcurrentQueue<UIEvent>();
             _queueProcessingThread = new Thread(this.processQueue);
             _queueProcessingThread.Name = "queueProcessingThread";
@@ -69,6 +74,7 @@ namespace TestBed
         /// </summary>
         ~UIHandle_LLSL()
         {
+            log.Debug(string.Format("Destroying UIHandle_LLSL: {0}", this));
             this.requestStop();
         }
 
@@ -77,6 +83,7 @@ namespace TestBed
         /// </summary>
         public void requestStop()
         {
+            log.Info(string.Format("UIHandle_LLSL:{} requesting stop", this));
             _shouldStop = true;
             _queueProcessingThread.Join();
         }
@@ -88,6 +95,7 @@ namespace TestBed
         //*************************** UIEventInterface Start **************************************************//
         void UIEventInterface.enqueueUIEvent(UIEvent inEvent)
         {
+            log.Info(string.Format("Enqueueing UIEvent {0}", inEvent.getEventIdentifier()));
             _eventQueue.Enqueue(inEvent);
             _enqueueEvent.Set();
         }
@@ -110,11 +118,14 @@ namespace TestBed
             while (!_shouldStop)
             {
                 //Get out the newest event
+                log.Debug("Waiting for new event in UIHandle_LLSL processing queue");
                 _enqueueEvent.WaitOne();
                 if (_eventQueue.Count() < 1) continue;
+                log.Debug("UIHandle_LLSL processing thread received item enqueued event");
                 UIEvent newEvent;
                 bool dequeueSuccessful = _eventQueue.TryDequeue(out newEvent);
                 if (!dequeueSuccessful) continue;
+                log.Info(string.Format("UIHandle_LLSL processing queue dequeued event {0}", newEvent.getEventIdentifier()));
 
                 //Decide what to do with the event
                 switch (newEvent.getEventIdentifier())
@@ -122,25 +133,31 @@ namespace TestBed
                     case UIEventIdentifier.GenericEvent:
                         break;
                     case UIEventIdentifier.ConnectClicked:
+                        log.Debug("Handling ConnectClicked ui event");
                         handleConnectClickedEvent();
                         break;
                     case UIEventIdentifier.ToggleLEDClicked:
+                        log.Debug("Handling toggleLED ui event");
                         handleToggleLEDClickedEvent();
                         break;
                     case UIEventIdentifier.FlashLEDClicked:
+                        log.Debug("Handling flashLED ui event");
                         handleFlashLEDClickedEvent();
                         break;
                     case UIEventIdentifier.ChangeLEDStateClicked:
                         ChangeLEDStateUIEvent changeLEDEvent = (ChangeLEDStateUIEvent)newEvent;
                         bool ledIsHigh = changeLEDEvent._isHigh;
+                        log.Debug(string.Format("Handling changeLED (setting high: {0}) ui event", changeLEDEvent._isHigh));
                         handleChangeLEDStateClickedEvent(ledIsHigh);
                         break;
                     case UIEventIdentifier.ToggleOutputClicked:
                         ToggleOutputUIEvent toggleOutputEvent = (ToggleOutputUIEvent)newEvent;
                         DIOPins pinToToggle = toggleOutputEvent._pinToToggle;
+                        log.Debug(string.Format("Handling toggleOutput (toggle pin: {0}) ui event", toggleOutputEvent._pinToToggle));
                         handleToggleOutputClickedEvent(pinToToggle);
                         break;
                     case UIEventIdentifier.StartTestSequencerClicked:
+                        log.Debug("Handling startTestSequence ui event");
                         handleStartTestSequencerClickedEvent();
                         break;
                     default:
@@ -156,7 +173,6 @@ namespace TestBed
         private void handleFlashLEDClickedEvent() { _logicalLayer.flashLED_LL(); }
         private void handleChangeLEDStateClickedEvent(bool isHigh) { _logicalLayer.changeLEDState(isHigh); }
         private void handleToggleOutputClickedEvent(DIOPins pinToToggle) { _logicalLayer.toggleOutput(pinToToggle); }
-
         private void handleStartTestSequencerClickedEvent() { _startTestSequenceEvent.Set(); }
 
 
@@ -168,6 +184,7 @@ namespace TestBed
         //*************************************** Sequencer Methods **********************************************//
         public bool waitForStartTestSequenceClicked(int inMSToWait = 0)
         {
+            log.Debug("Waiting for start test to be clicked");
             if (inMSToWait == 0){_startTestSequenceEvent.WaitOne(); return true; }
             else{  return _startTestSequenceEvent.WaitOne(inMSToWait);}
         }
