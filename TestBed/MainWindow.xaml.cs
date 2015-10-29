@@ -16,16 +16,22 @@ using System.Windows.Shapes;
 
 namespace TestBed
 {
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger
+            (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+
         //Used to let another object know when UI events happen        
         private UIEventInterface _uiDelegate;
 
         public MainWindow()
         {
+            log.Info("Starting Main Window");
             InitializeComponent();
         }
 
@@ -36,6 +42,7 @@ namespace TestBed
         /// <param name="inDelegate"></param>
         public void setDelegate(UIEventInterface inDelegate)
         {
+            log.Info(String.Format("Setting the MainWindows delegate: {0}", inDelegate));
             _uiDelegate = inDelegate;
         }
 
@@ -50,40 +57,67 @@ namespace TestBed
         /************************************************************************************************************************/
         private void connectButton_Click(object sender, RoutedEventArgs e)
         {
+            log.Info("Clicked the connect button");
             ConnectUIEvent clickTarget = new ConnectUIEvent();
-            if(_uiDelegate != null)_uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null)
+            {
+                log.Debug("Adding clickk event to processing queue");
+                 _uiDelegate.enqueueUIEvent(clickTarget);
+            }
         }
 
         private void flashLEDButton_Click(object sender, RoutedEventArgs e)
         {
+            log.Info("Clicked the flashLED button");
             FlashLEDUIEvent clickTarget = new FlashLEDUIEvent();
-            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null)
+            {
+                log.Debug("Adding the flashLED event to processing queue");
+                _uiDelegate.enqueueUIEvent(clickTarget);
+            }
         }
 
         private void turnOnLEDButton_Click(object sender, RoutedEventArgs e)
         {
+            log.Info("Clicked the turnOnLED button");
             ChangeLEDStateUIEvent clickTarget = new ChangeLEDStateUIEvent(true);
-            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null)
+            {
+                log.Debug("Adding the turnOnLED event to processing queue");
+                _uiDelegate.enqueueUIEvent(clickTarget);
+            }
         }
 
         private void turnOffLEDButton_Click(object sender, RoutedEventArgs e)
         {
+            log.Info("Clicked the turnOffLED button");
             ChangeLEDStateUIEvent clickTarget = new ChangeLEDStateUIEvent(false);
-            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null)
+            {
+                log.Debug("Adding the turnOffLED event to processing queue");
+                _uiDelegate.enqueueUIEvent(clickTarget);
+            }
         }
 
         private void toggleLEDButton_Click(object sender, RoutedEventArgs e)
         {
+            log.Info("Clicked the toggleLED button");
             ToggleLEDUIEvent clickTarget = new ToggleLEDUIEvent();
-            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null)
+            {
+                log.Debug("Adding the toggleLED event to processing queue");
+                _uiDelegate.enqueueUIEvent(clickTarget);
+            }
         }
 
 
         //Uses the combo box to determine what output you want to toggle
         private void toggleOutput_Click(object sender, RoutedEventArgs e)
         {
+            log.Info("Clicked the toggleOutput button");
             String targetOutput = dioSelector.Text;
             DIOPins pinToToggle;
+            log.Info(String.Format("{0} selected when toggleOutput button clicked", targetOutput));
             switch (targetOutput)
             {
                 case "Heater (RA4) (White)":
@@ -96,11 +130,15 @@ namespace TestBed
                     pinToToggle = DIOPins.WaterPump_RB7;
                     break;
                 default:
-                    Console.WriteLine("Do not recognize the selected IO in the combo box");
+                    log.Error(String.Format("Did not recognize selected port to toggle : {0}", targetOutput));
                     return;
             }
             ToggleOutputUIEvent clickTarget = new ToggleOutputUIEvent(pinToToggle);
-            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null)
+            {
+                log.Debug("Adding the toggleOutput event to the processing queue");
+                _uiDelegate.enqueueUIEvent(clickTarget);
+            }
         }
 
 
@@ -109,8 +147,13 @@ namespace TestBed
         /// </summary>
         private void startTestSequencerButton_Click(object sender, RoutedEventArgs e)
         {
+            log.Info("Clicked the startTestSequence button");
             StartTestSequencerUIEvent clickTarget = new StartTestSequencerUIEvent();
-            if (_uiDelegate != null) _uiDelegate.enqueueUIEvent(clickTarget);
+            if (_uiDelegate != null)
+            {
+                log.Debug("Adding the startTestSequence event to the processing queue");
+                _uiDelegate.enqueueUIEvent(clickTarget);
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-[assembly: log4net.Config.XmlConfigurator(Watch = true)]
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = @"C:\vault\TestBed\Config\testBedLoggerConfig.xml", Watch = true)]
 
 namespace TestBed
 {
@@ -24,16 +24,24 @@ namespace TestBed
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            log.Info("This is the first log");
+            log.Info("Application Starting");
+            log.Info(String.Format("Using config file : {0}", configFile));
+            log.Info("----------------------------------------------------");
+
             //Get the config file
+            log.Debug("Setup configuration");
             SystemConfig systemConfig = new SystemConfig(configFile);
 
             //Set up all the objects and delegates necesary to run the program
+            log.Debug("Setup objects");
             PhysicalLayer physicalLayer = new PhysicalLayer(systemConfig.getDeviceConfig());
             LogicalLayer logicalLayer = new LogicalLayer(physicalLayer);
             physicalLayer.setDelegate(logicalLayer);
             UIHandle_LLSL uiHandle = new UIHandle_LLSL(logicalLayer);
             SequencerLayer sequencer = new SequencerLayer(uiHandle, logicalLayer);
+
+            //Setup main window
+            log.Debug("Setup main window");
             MainWindow wnd = new MainWindow();
             wnd.setDelegate(uiHandle);
             wnd.Show();

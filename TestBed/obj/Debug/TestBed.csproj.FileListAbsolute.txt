@@ -33,3 +33,4 @@ C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Debu
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Debug\TestBed.csproj.GenerateResource.Cache
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Debug\TestBed.exe
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Debug\TestBed.pdb
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Debug\TestBed.csprojResolveAssemblyReference.cache
