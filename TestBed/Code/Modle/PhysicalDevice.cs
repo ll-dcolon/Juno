@@ -56,6 +56,15 @@ namespace TestBed
         //the device picks up
         private PhysicalDeviceInterface deviceDelegate;
 
+        //Threads used to continuously query sensors
+        private Thread _thermistorVoltageThread;
+
+        //The number of ms to sleep between queries.
+        private const int MS_BETWEEN_QUERYS= 500;
+
+        //Flag used to stop threads
+        private volatile bool _shouldStop;
+
 
         /// <summary>
         /// Creates a new physical device object and attempt to open the serial port
@@ -69,7 +78,33 @@ namespace TestBed
             _incommingStringQueue = new ConcurrentQueue<string>();
             _canReceiveResponce = false;
             findSerialDevice();
+
+            _shouldStop = false;
+            _thermistorVoltageThread = new Thread(this.queryThermistorVoltage);
+            _thermistorVoltageThread.Name = "thermistorVoltageThread";
+            _thermistorVoltageThread.Start();
         }
+
+
+        /// <summary>
+        /// Destroys the physical layer
+        /// </summary>
+        ~PhysicalLayer()
+        {
+            log.Debug("Destroying physical layer");
+            stopThreads();
+        }
+
+
+        /// <summary>
+        /// Stops all the sensor monitoring threads
+        /// </summary>
+        private void stopThreads()
+        {
+            _shouldStop = true;
+            _thermistorVoltageThread.Join();
+        }
+
 
 
         /// <summary>
@@ -161,6 +196,12 @@ namespace TestBed
             else newPinState = 0x00;
             log.Debug(string.Format("Sending DigitalIOControl message to turn pin {0} to state {1}", (int)pinToSet, newPinState));
             sendMessage(DeviceMessageIdentifier.DigitalOControl, buildMessage(new List<int> { 0x05, 0x35, (int)pinToSet, 0x00, newPinState }));
+        }
+
+        public void queryAnalogChannel(AnalogPins pinToQuery)
+        {
+            log.Debug(string.Format("Querying Analog pin {0}", pinToQuery));
+            sendMessage(DeviceMessageIdentifier.AnalogPinQuery, buildMessage(new List<int> {0x03, 0x50, (int)pinToQuery}));
         }
 
 
@@ -287,6 +328,17 @@ namespace TestBed
                         }
                     }
                     break;
+                case DeviceMessageIdentifier.AnalogPinQuery:
+                    Console.WriteLine(inResponce);
+                    char first = inResponce[0];
+                    char second = inResponce[1];
+                    uint voltage = (uint)second << 8;
+                    voltage |= first;
+                    float fvoltage = (float)voltage;
+                    Console.WriteLine("{0}", fvoltage);
+                    Console.WriteLine("Wo?");
+                    //!@#NEED TO DO
+                    break;
                 case DeviceMessageIdentifier.DigitalIControl:
                 case DeviceMessageIdentifier.DigitalOControl:
                 case DeviceMessageIdentifier.FlashLED:
@@ -313,6 +365,9 @@ namespace TestBed
                 case DeviceMessageIdentifier.PingDevice:
                 case DeviceMessageIdentifier.DigitalIControl:
                     toReturn = 1;
+                    break;
+                case DeviceMessageIdentifier.AnalogPinQuery:
+                    toReturn = 2;
                     break;
                 case DeviceMessageIdentifier.FlashLED:
                 case DeviceMessageIdentifier.LEDControl:
@@ -356,7 +411,6 @@ namespace TestBed
                 case DeviceMessageIdentifier.DigitalOControl:
                     log.Error("Have not implemented these methods for device notifications");
                     break;
-                case DeviceMessageIdentifier.PingDevice:
                 default:
                     log.Error("This message should not need the device completed notification because it expects a responce from the device");
                     break;
@@ -401,5 +455,19 @@ namespace TestBed
             }
         }
 
+
+
+
+
+
+        //******************************************************** Sensor Query Threads ************************************************************************//
+        private void queryThermistorVoltage()
+        {
+            while (!_shouldStop)
+            {
+                queryAnalogChannel(AnalogPins.Thermistor_AN5);
+                Thread.Sleep(MS_BETWEEN_QUERYS);
+            }
+        }
     }
 }

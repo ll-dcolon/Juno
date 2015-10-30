@@ -25,6 +25,8 @@ namespace TestBed
 
         //Thread used for the basic sequencer testing
         private Thread _testSequencerThread;
+        //Thread to monitor the voltage of the thermistor voltage divider
+        private Thread _voltageThread;
 
 
 
@@ -59,6 +61,10 @@ namespace TestBed
             _testSequencerThread = new Thread(this.testSequencer);
             _testSequencerThread.Name = "testSequencerThread";
             _testSequencerThread.Start();
+
+            _voltageThread = new Thread(this.voltageThread);
+            _voltageThread.Name = "voltageThread";
+            _voltageThread.Start();
         }
 
         /// <summary>
@@ -69,6 +75,17 @@ namespace TestBed
             log.Debug("Requesting sequencer stop");
             _shouldStop = true;
             _testSequencerThread.Join();
+            _voltageThread.Join();
+        }
+
+
+        private void voltageThread()
+        {
+            while (!_shouldStop)
+            {
+
+
+            }
         }
 
 

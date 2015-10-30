@@ -35,7 +35,8 @@ namespace TestBed
         LEDControl,
         RelayControl,
         DigitalIControl,
-        DigitalOControl
+        DigitalOControl,
+        AnalogPinQuery
     };
 
 
@@ -46,6 +47,13 @@ namespace TestBed
         AirPump_RB6 = 0x13,
         WaterPump_RB7 = 0x12
     };
+
+
+    //THe names of the analog pins
+    public enum AnalogPins
+    {
+        Thermistor_AN5 = 0x05
+    }
 
 
 }

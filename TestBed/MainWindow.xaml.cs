@@ -16,6 +16,20 @@ using System.Windows.Shapes;
 
 namespace TestBed
 {
+    /// <summary>
+    /// Interface which will be implemented by any class that is allowed to update the UI
+    /// Other objects will delegate the objects which implement this interface if they
+    /// want to update the UI
+    /// </summary>
+    public interface UpdateUIInterface
+    {
+        /// <summary>
+        /// Updates the voltage value on the UI
+        /// </summary>
+        /// <param name="inVoltageValue">The new voltage value to display</param>
+        void updateVoltageValue(float inVoltageValue);
+    }
+
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -33,6 +47,17 @@ namespace TestBed
         {
             log.Info("Starting Main Window");
             InitializeComponent();
+            InitializeScreenItems();
+        }
+
+
+        /// <summary>
+        /// Sets up the screen items to be the desired style and to
+        /// have the correct values
+        /// </summary>
+        private void InitializeScreenItems()
+        {
+            voltageValue.Text = "????";
         }
 
 
@@ -154,6 +179,16 @@ namespace TestBed
                 log.Debug("Adding the startTestSequence event to the processing queue");
                 _uiDelegate.enqueueUIEvent(clickTarget);
             }
+        }
+
+
+
+
+
+        //******************************************************* UpdateUIInterface Methods **********************************************************//
+        public void updateVoltageValue(float inNewVoltage)
+        {
+
         }
     }
 }

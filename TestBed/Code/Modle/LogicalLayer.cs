@@ -173,7 +173,7 @@ namespace TestBed
         /********************************** Physical Device Interface ********************************************/
         public void deviceConnected()
         {
-            log.Debug("Device is not connected");
+            log.Debug("Device is connected");
             _deviceConnected = true;
         }
         public void flashLEDSent(){}
