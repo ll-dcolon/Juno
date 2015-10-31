@@ -44,7 +44,7 @@ namespace TestBed
         //The configuration object used for the device
         private DeviceConfig _deviceConfig;
         //Buffer used to hold incoming bytes until they can be parsed
-        private ConcurrentQueue<string> _incommingStringQueue;
+        private ConcurrentQueue<byte[]> _incommingByteQueue;
         //Used to lock communication with the device
         private Object _lockDeviceComm;
         //Tells the queue that it is allowed to recieve messages
@@ -56,14 +56,24 @@ namespace TestBed
         //the device picks up
         private PhysicalDeviceInterface deviceDelegate;
 
+        //THe number of bytes we expect from the device
+        private int _numBytesInResponce;
+
         //Threads used to continuously query sensors
         private Thread _thermistorVoltageThread;
 
         //The number of ms to sleep between queries.
-        private const int MS_BETWEEN_QUERYS= 500;
+        private const int MS_BETWEEN_QUERYS= 1000;
+        //The number of ms to wait for a responce
+        private const int MS_TO_WAIT_FOR_RESPONCE = 3000;
 
-        //Flag used to stop threads
+        //Flag used to manage threads
         private volatile bool _shouldStop;
+        private volatile bool _hasStarted;
+
+
+        //Some stuff used for debug
+        private int _counter;
 
 
         /// <summary>
@@ -75,14 +85,13 @@ namespace TestBed
             _deviceConfig = inDeviceConfig;
             _lockDeviceComm = new object();
             _enqueueEvent = new AutoResetEvent(false);
-            _incommingStringQueue = new ConcurrentQueue<string>();
             _canReceiveResponce = false;
             findSerialDevice();
 
             _shouldStop = false;
-            _thermistorVoltageThread = new Thread(this.queryThermistorVoltage);
-            _thermistorVoltageThread.Name = "thermistorVoltageThread";
-            _thermistorVoltageThread.Start();
+            _hasStarted = false;
+
+            _counter = 0;
         }
 
 
@@ -92,7 +101,10 @@ namespace TestBed
         ~PhysicalLayer()
         {
             log.Debug("Destroying physical layer");
-            stopThreads();
+            if (_hasStarted)
+            {
+                stopThreads();
+            }
         }
 
 
@@ -234,21 +246,22 @@ namespace TestBed
             log.Debug("Attempting to send message to device");
             if (_serialPort.IsOpen)
             {
-                int numBytesInDeviceResponce = getResponceLength(inMessageIdentifier);
-                log.Debug(string.Format("Expecting {0} bytes from the device as a responce", numBytesInDeviceResponce));
                 lock(_lockDeviceComm)
                 {
-                    _incommingStringQueue = new ConcurrentQueue<string>();
+                    _numBytesInResponce = getResponceLength(inMessageIdentifier);
+                    log.Debug(string.Format("Expecting {0} bytes from the device as a responce", _numBytesInResponce));
+                    _incommingByteQueue = new ConcurrentQueue<byte[]>();
                     _canReceiveResponce = true;
                     _serialPort.Write(inMessageToSend);
-                    if (numBytesInDeviceResponce > 0)
+                    if (_numBytesInResponce> 0)
                     {
-                        string responce = "";
-                        bool receivedResponce = waitForResponce(numBytesInDeviceResponce, ref responce);
+                        byte[] responce = new byte[_numBytesInResponce];
+                        bool receivedResponce = waitForResponce(_numBytesInResponce, ref responce);
                         log.Debug(string.Format("Received responce {0}", receivedResponce));
                         if (receivedResponce)
                         {
                             processResponce(inMessageIdentifier, responce);
+                            _canReceiveResponce = false;
                         }
                     }
                     else
@@ -274,13 +287,13 @@ namespace TestBed
         /// <param name="inNumBytesToReceivce">The number of bytes that we expect to get from the queue</param>
         /// <param name="outResponce">The string to fill with the responce taken from the queue</param>
         /// <returns>True if we got a responce of the correct length</returns>
-        private bool waitForResponce(int inNumBytesToReceivce, ref string outResponce)
+        private bool waitForResponce(int inNumBytesToReceivce, ref byte[] outResponce)
         {
             log.Debug("Waiting for responce from device");
-            int msToWait = 1000;
+            int msToWait = MS_TO_WAIT_FOR_RESPONCE;
             if (_enqueueEvent.WaitOne(msToWait))
             {
-                _incommingStringQueue.TryDequeue(out outResponce);
+                _incommingByteQueue.TryDequeue(out outResponce);
                 log.Debug(string.Format("Received a responce from the device.  Responce: {0}", outResponce));
                 if (outResponce.Length == inNumBytesToReceivce)
                 {
@@ -312,13 +325,13 @@ namespace TestBed
         /// </summary>
         /// <param name="inMessageIdentifier">The message type we are sending</param>
         /// <param name="inResponce">The responce we recieved from the device</param>
-        private void processResponce(DeviceMessageIdentifier inMessageIdentifier, string inResponce)
+        private void processResponce(DeviceMessageIdentifier inMessageIdentifier, byte[] inResponce)
         {
             log.Debug(string.Format("Processing responce from message {0}", inMessageIdentifier));
             switch (inMessageIdentifier)
             {
                 case DeviceMessageIdentifier.PingDevice:
-                    if (inResponce.Length == 1 && inResponce.ToCharArray()[0] == (char)0x59)
+                    if (inResponce.Length == 1 && inResponce[0] == 0x59)
                     {
                         log.Debug("Received correct value for pind message");
                         if (deviceDelegate != null)
@@ -326,18 +339,24 @@ namespace TestBed
                             log.Debug("Sending device connected to the delegate");
                             deviceDelegate.deviceConnected();
                         }
+                        if (!_hasStarted)
+                        {
+                            startSensorThreads();
+                            _hasStarted = true;
+                        }
                     }
                     break;
                 case DeviceMessageIdentifier.AnalogPinQuery:
-                    Console.WriteLine(inResponce);
-                    char first = inResponce[0];
-                    char second = inResponce[1];
-                    uint voltage = (uint)second << 8;
+                    //Console.WriteLine(inResponce);
+                    byte first = inResponce[0];
+                    byte second = inResponce[1];
+                    int voltage = (int)second<< 8;
                     voltage |= first;
-                    float fvoltage = (float)voltage;
-                    Console.WriteLine("{0}", fvoltage);
-                    Console.WriteLine("Wo?");
-                    //!@#NEED TO DO
+                    Console.WriteLine("Int value {0}", voltage);
+                    double firstValue = (double)voltage / 1020;
+                    Console.WriteLine("First value {0}", firstValue);
+                    double fvoltage = firstValue* 5.022;
+                    Console.WriteLine("voltage value {0}", fvoltage);
                     break;
                 case DeviceMessageIdentifier.DigitalIControl:
                 case DeviceMessageIdentifier.DigitalOControl:
@@ -442,9 +461,12 @@ namespace TestBed
             try
             {
                 SerialPort port = (SerialPort)sender;
-                string read = port.ReadExisting();
-                log.Debug(string.Format("Received string {0}", read));
-                _incommingStringQueue.Enqueue(read);
+                byte[] bytes = new byte[_numBytesInResponce];
+                port.Read(bytes, 0, _numBytesInResponce);
+
+                //string read = port.ReadExisting();
+                log.Debug(string.Format("Received string {0}", bytes));
+                _incommingByteQueue.Enqueue(bytes);
                 _enqueueEvent.Set();
 
             }
@@ -453,6 +475,21 @@ namespace TestBed
                 log.Fatal("Received exception when trying to read from serial port", exception);
                 throw exception;
             }
+        }
+
+
+
+
+
+
+        /// <summary>
+        /// Spins off all the sensor threads
+        /// </summary>
+        private void startSensorThreads()
+        {
+            _thermistorVoltageThread = new Thread(this.queryThermistorVoltage);
+            _thermistorVoltageThread.Name = "thermistorVoltageThread";
+            _thermistorVoltageThread.Start();
         }
 
 

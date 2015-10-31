@@ -64,7 +64,7 @@ namespace TestBed
 
             _voltageThread = new Thread(this.voltageThread);
             _voltageThread.Name = "voltageThread";
-            _voltageThread.Start();
+            //_voltageThread.Start();
         }
 
         /// <summary>
@@ -83,6 +83,7 @@ namespace TestBed
         {
             while (!_shouldStop)
             {
+                Thread.Sleep(1000);
 
 
             }
