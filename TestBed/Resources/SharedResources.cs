@@ -25,7 +25,6 @@ namespace TestBed
     };
 
 
-
     //Identifiers for all the message types this program can send
     //to the device
     public enum DeviceMessageIdentifier

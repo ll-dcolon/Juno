@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Collections.Concurrent;
+using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -24,17 +26,21 @@ namespace TestBed
     public interface UpdateUIInterface
     {
         /// <summary>
-        /// Updates the voltage value on the UI
+        /// Updates the temp value on the UI
         /// </summary>
-        /// <param name="inVoltageValue">The new voltage value to display</param>
-        void updateVoltageValue(float inVoltageValue);
+        /// <param name="inVoltageValue">The new temp value to display, in C</param>
+        void updateTempValue(double inTempValue);
     }
+
+
+
+
 
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, UpdateUIInterface
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger
             (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -42,6 +48,10 @@ namespace TestBed
 
         //Used to let another object know when UI events happen        
         private UIEventInterface _uiDelegate;
+
+
+
+
 
         public MainWindow()
         {
@@ -186,9 +196,15 @@ namespace TestBed
 
 
         //******************************************************* UpdateUIInterface Methods **********************************************************//
-        public void updateVoltageValue(float inNewVoltage)
+        public void updateTempValue(double inNewTemp)
         {
+            string cValueString = string.Format("{0}", inNewTemp);
+            double fValue = (inNewTemp * (9.0 / 5.0)) + 32;
+            string fValueString = string.Format("{0}", fValue);
 
+            string bothStrings = string.Format("{0}f {1}c", fValue, inNewTemp);
+            Dispatcher.Invoke((Action)delegate(){ voltageValue.Text = fValueString; });
         }
+
     }
 }

@@ -27,6 +27,12 @@ namespace TestBed
         /// Notifies the delegate when the ledControl message has been successfully sent
         /// </summary>
         void ledControlSent();
+
+        /// <summary>
+        /// Physical layer send the new temp data from the device to its delegate
+        /// </summary>
+        /// <param name="inNewTemp">The new temp data from the device in C</param>
+        void newThermistorData(double inNewTemp);
     }
 
 
@@ -66,6 +72,17 @@ namespace TestBed
         private const int MS_BETWEEN_QUERYS= 1000;
         //The number of ms to wait for a responce
         private const int MS_TO_WAIT_FOR_RESPONCE = 3000;
+
+        //The voltage for the thermistor
+        private const double THERMISTOR_VOLTAGE = 5.022;
+        //The resistance used for R2 in the voltage divider
+        private const int VOLTAGE_DIVIDER_RESISTANCE = 47000;
+        //THermistor reference resistance 
+        private const int THERMISTOR_REF_RESISTANCE = 100000;
+        //THermistor reference temp in kelvin
+        private const double THERMISTOR_REF_TEMP_K = 298.15;
+        //THermistor constant
+        private const int THERMISTOR_B_VALUE = 3950;
 
         //Flag used to manage threads
         private volatile bool _shouldStop;
@@ -347,16 +364,14 @@ namespace TestBed
                     }
                     break;
                 case DeviceMessageIdentifier.AnalogPinQuery:
-                    //Console.WriteLine(inResponce);
-                    byte first = inResponce[0];
-                    byte second = inResponce[1];
-                    int voltage = (int)second<< 8;
-                    voltage |= first;
-                    Console.WriteLine("Int value {0}", voltage);
-                    double firstValue = (double)voltage / 1020;
-                    Console.WriteLine("First value {0}", firstValue);
-                    double fvoltage = firstValue* 5.022;
-                    Console.WriteLine("voltage value {0}", fvoltage);
+                    double voltage = getThermistorVoltage(inResponce);
+                    double resistance = getThermistorResistance(voltage);
+                    double tempC = getTempInC(resistance);
+                    if (deviceDelegate != null)
+                    {
+                        log.Debug("Sending temp data to logical layer");
+                        deviceDelegate.newThermistorData(tempC);
+                    }
                     break;
                 case DeviceMessageIdentifier.DigitalIControl:
                 case DeviceMessageIdentifier.DigitalOControl:
@@ -492,6 +507,74 @@ namespace TestBed
             _thermistorVoltageThread.Start();
         }
 
+
+
+        /// <summary>
+        /// Takes the data received from the device and converts it into a valid 
+        /// voltage value
+        /// </summary>
+        /// <param name="inData">The data received from the device</param>
+        /// <returns></returns>
+        private double getThermistorVoltage(byte[] inData)
+        {
+            if (inData.Length != 2)
+            {
+                log.Error(string.Format("Expected inData to have length 2, instead it has length {0}", inData.Length));
+                return 0;
+            }
+
+            //!@#GET RID OF MAJIC NUMBERS
+            byte firstByte = inData[0];
+            byte secondByte = inData[1];
+            int combinedData = (int)secondByte << 8;
+            combinedData |= firstByte;
+            double temp = (double)combinedData / 1020;
+            double voltage = temp * THERMISTOR_VOLTAGE;
+            return voltage;
+        }
+
+
+        /// <summary>
+        /// Takes in a voltage and uses that to compute the resistance of the termistor
+        /// It uses the know values of the voltage divider to computer this
+        /// </summary>
+        /// <param name="voltage">Coltage coming out of the voltage divider</param>
+        /// <returns>The resistance of the thermistor</returns>
+        private double getThermistorResistance(double inVoltage)
+        {
+            double numerator = VOLTAGE_DIVIDER_RESISTANCE * THERMISTOR_VOLTAGE;
+            double divide = numerator/ inVoltage;
+            double resistance = divide - VOLTAGE_DIVIDER_RESISTANCE;
+            return resistance;
+        }
+
+
+        /// <summary>
+        /// Takes the resistance of the thermistor and returns the temp of the thermistor 
+        /// in C
+        /// User equation 1/T2 = 1/T1 - ((ln(R1/R2))/B)
+        /// where T2 = output temp in kelvin
+        /// T1 = Reference temp in kelvin (25C)
+        /// R1 = Resistance at reference temp
+        /// R2 = measured resistance 
+        /// B = Thermistor constant (3950 for our thermistor)
+        /// </summary>
+        /// <param name="resistance">The resistance of the thermistor</param>
+        /// <returns>The temp of the thermistor in C</returns>
+        private double getTempInC(double inResistance)
+        {
+            double natLog = Math.Log(THERMISTOR_REF_RESISTANCE / inResistance);
+            double divide = natLog / THERMISTOR_B_VALUE;
+            double subtract = (1 / THERMISTOR_REF_TEMP_K) - divide;
+            double invert = 1 / subtract;
+            double tempC = invert - 273.15;
+            log.Debug(string.Format("Current heater temp = {0}", tempC));
+            return tempC;
+        }
+
+
+
+        //T2= T1* B/ln(R1/R2)  /  ( B/ln(R1/R2) - T1 )
 
 
 

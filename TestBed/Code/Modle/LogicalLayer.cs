@@ -25,6 +25,14 @@ namespace TestBed
         private ConcurrentDictionary<DIOPins, bool> _pinStates;
 
 
+        //Used to keep track of the current water temperature
+        private double _currentWaterTemp;
+        private object _waterTempLock;
+
+        //Lets the logical layer directly update the UI
+        private UpdateUIInterface _updateUIDelegate;
+
+
         /// <summary>
         /// Creates the logical layer with a reference to the physical layer
         /// </summary>
@@ -37,6 +45,9 @@ namespace TestBed
             _ledHigh = false;
             _pinStates = new ConcurrentDictionary<DIOPins, bool>();
 
+            _currentWaterTemp = 0;
+            _waterTempLock = new object();
+
             //!@#Assumes the starting state for the device is all high.
             //I set this is the physical device start up
             //Make sure if you change something here, change it in the physical 
@@ -45,6 +56,16 @@ namespace TestBed
             _pinStates.TryAdd(DIOPins.AirPump_RB6, true);
             _pinStates.TryAdd(DIOPins.WaterPump_RB7, true);
             _pinStates.TryAdd(DIOPins.Heater_RA4, true);
+        }
+
+
+        /// <summary>
+        /// Sets the ui deleage to the input parameter
+        /// </summary>
+        /// <param name="inNewUIDelegate">The new UI delegate</param>
+        public void setUIDelegate(UpdateUIInterface inNewUIDelegate)
+        {
+            _updateUIDelegate = inNewUIDelegate;
         }
 
 
@@ -178,6 +199,29 @@ namespace TestBed
         }
         public void flashLEDSent(){}
         public void ledControlSent(){}
+
+
+
+        /// <summary>
+        /// Fires every time the physical layer has new temp data from the device
+        /// </summary>
+        /// <param name="inNewTemp"></param>
+        public void newThermistorData(double inNewTemp)
+        {
+            double roundedInput = Math.Round(inNewTemp, 1);
+            lock (_waterTempLock)
+            {
+                if (roundedInput != _currentWaterTemp)
+                {
+                    _currentWaterTemp = roundedInput;
+                    if (_updateUIDelegate != null)
+                    {
+                        _updateUIDelegate.updateTempValue(roundedInput);
+                    }
+                } 
+            }
+
+        }
 
 
 

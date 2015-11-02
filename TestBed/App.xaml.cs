@@ -43,6 +43,7 @@ namespace TestBed
             //Setup main window
             log.Debug("Setup main window");
             MainWindow wnd = new MainWindow();
+            logicalLayer.setUIDelegate(wnd);
             wnd.setDelegate(uiHandle);
             wnd.Show();
         }
