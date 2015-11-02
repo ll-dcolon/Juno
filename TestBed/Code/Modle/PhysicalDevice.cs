@@ -69,7 +69,7 @@ namespace TestBed
         private Thread _thermistorVoltageThread;
 
         //The number of ms to sleep between queries.
-        private const int MS_BETWEEN_QUERYS= 1000;
+        private const int MS_BETWEEN_QUERYS= 200;
         //The number of ms to wait for a responce
         private const int MS_TO_WAIT_FOR_RESPONCE = 3000;
 
@@ -173,11 +173,11 @@ namespace TestBed
             //If you change something here, make sure you change it there too
             log.Debug("Setting the state of all the outputs");
             //RA4
-            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, 0x0E, 0x00, 0x01 }));
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.AirPump_AN0, 0x00, 0x01 }));
             //RB7
-            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, 0x12, 0x00, 0x01 }));
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.WaterPump_AN2, 0x00, 0x01 }));
             //RB6
-            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, 0x13, 0x00, 0x01 }));
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.Heater_AN1, 0x00, 0x01 }));
         }
 
 

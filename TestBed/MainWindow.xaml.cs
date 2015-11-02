@@ -30,6 +30,13 @@ namespace TestBed
         /// </summary>
         /// <param name="inVoltageValue">The new temp value to display, in C</param>
         void updateTempValue(double inTempValue);
+
+
+        /// <summary>
+        /// Tells the UI to update the connection status of the device
+        /// </summary>
+        /// <param name="inIsConnected">True if the device is connected, false if it is not</param>
+        void updateConnectionStatus(bool inIsConnected);
     }
 
 
@@ -155,14 +162,14 @@ namespace TestBed
             log.Info(String.Format("{0} selected when toggleOutput button clicked", targetOutput));
             switch (targetOutput)
             {
-                case "Heater (RA4) (White)":
-                    pinToToggle = DIOPins.Heater_RA4;
+                case "Heater (AN1) (Red)":
+                    pinToToggle = DIOPins.Heater_AN1;
                     break;
-                case "Air Pump (RB6) (Green)":
-                    pinToToggle = DIOPins.AirPump_RB6;
+                case "Air Pump (AN0) (White)":
+                    pinToToggle = DIOPins.AirPump_AN0;
                     break;
-                case "Water Pump (RB7) (Red)":
-                    pinToToggle = DIOPins.WaterPump_RB7;
+                case "Water Pump (AN2) (Green)":
+                    pinToToggle = DIOPins.WaterPump_AN2;
                     break;
                 default:
                     log.Error(String.Format("Did not recognize selected port to toggle : {0}", targetOutput));
@@ -204,6 +211,19 @@ namespace TestBed
 
             string bothStrings = string.Format("{0}f {1}c", fValue, inNewTemp);
             Dispatcher.Invoke((Action)delegate(){ voltageValue.Text = fValueString; });
+        }
+
+
+        public void updateConnectionStatus(bool inNewConnectionStatus)
+        {
+            if (inNewConnectionStatus)
+            {
+                Dispatcher.Invoke((Action)delegate () { isConnected.IsChecked = true; });
+            }
+            else
+            {
+                Dispatcher.Invoke((Action)delegate () { isConnected.IsChecked = false; });
+            }
         }
 
     }

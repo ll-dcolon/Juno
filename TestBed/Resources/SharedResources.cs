@@ -42,9 +42,9 @@ namespace TestBed
     //The names that we will give various pins
     public enum DIOPins
     {
-        Heater_RA4 = 0x0E,
-        AirPump_RB6 = 0x13,
-        WaterPump_RB7 = 0x12
+        Heater_AN1 = 0x01,
+        AirPump_AN0 = 0x00,
+        WaterPump_AN2 = 0x02
     };
 
 

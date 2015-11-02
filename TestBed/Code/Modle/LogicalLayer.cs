@@ -53,9 +53,9 @@ namespace TestBed
             //Make sure if you change something here, change it in the physical 
             //device too
             log.Debug("Setting starting states of the outputs");
-            _pinStates.TryAdd(DIOPins.AirPump_RB6, true);
-            _pinStates.TryAdd(DIOPins.WaterPump_RB7, true);
-            _pinStates.TryAdd(DIOPins.Heater_RA4, true);
+            _pinStates.TryAdd(DIOPins.AirPump_AN0, true);
+            _pinStates.TryAdd(DIOPins.WaterPump_AN2, true);
+            _pinStates.TryAdd(DIOPins.Heater_AN1, true);
         }
 
 
@@ -196,6 +196,7 @@ namespace TestBed
         {
             log.Debug("Device is connected");
             _deviceConnected = true;
+            if (_updateUIDelegate != null) _updateUIDelegate.updateConnectionStatus(true);
         }
         public void flashLEDSent(){}
         public void ledControlSent(){}
