@@ -145,19 +145,26 @@ namespace TestBed
         /// <param name="pinToToggle"></param>
         public void toggleOutput(DIOPins pinToToggle)
         {
+            ToggleOutputUIEvent toggleOutputEvent = new ToggleOutputUIEvent(pinToToggle);
+            toggleOutput(toggleOutputEvent);
+        }
+
+        public void toggleOutput(ToggleOutputUIEvent inToggleOutputEvent)
+        {
             if (_deviceConnected)
             {
                 bool currentState;
+                DIOPins pinToToggle = inToggleOutputEvent._pinToToggle;
                 _pinStates.TryGetValue(pinToToggle, out currentState);
                 log.Debug(string.Format("Trying to set pin {0} with current state {1}, to state {2}", pinToToggle, currentState, !currentState));
                 if (currentState)
                 {
-                    _physicalLayer.setOutputState(pinToToggle, false);
+                    _physicalLayer.setOutputState(new UpdateOutputUIEvent(inToggleOutputEvent._pinToToggle, false));
                     _pinStates.TryUpdate(pinToToggle, false, true);
                 }
                 else
                 {
-                    _physicalLayer.setOutputState(pinToToggle, true);
+                    _physicalLayer.setOutputState(new UpdateOutputUIEvent(inToggleOutputEvent._pinToToggle, true));
                     _pinStates.TryUpdate(pinToToggle, true, false);
                 }
             }
@@ -172,13 +179,18 @@ namespace TestBed
         /// <param name="inShouldSetHigh">The state you want the pin to take.  True = high, false = low</param>
         public void controlOutput(DIOPins pinToChange, bool inShouldSetHigh)
         {
+            controlOutput(new UpdateOutputUIEvent(pinToChange, inShouldSetHigh));
+        }
+
+        public void controlOutput(UpdateOutputUIEvent inEvent)
+        {
             if (_deviceConnected)
             {
-                log.Debug(string.Format("Trying to set pin {0} to state {1}", pinToChange, inShouldSetHigh));
+                log.Debug(string.Format("Trying to set pin {0} to state {1}", inEvent._pinToUpdate, inEvent._shouldBeHigh));
                 bool oldValue;
-                _pinStates.TryGetValue(pinToChange, out oldValue);
-                _physicalLayer.setOutputState(pinToChange, inShouldSetHigh);
-                _pinStates.TryUpdate(pinToChange, inShouldSetHigh, oldValue);
+                _pinStates.TryGetValue(inEvent._pinToUpdate, out oldValue);
+                _physicalLayer.setOutputState(inEvent);
+                _pinStates.TryUpdate(inEvent._pinToUpdate, inEvent._shouldBeHigh, oldValue);
             }
             else
             {
@@ -201,6 +213,13 @@ namespace TestBed
         public void flashLEDSent(){}
         public void ledControlSent(){}
 
+        public void updateOutputSent(UpdateOutputUIEvent inEvent)
+        {
+            if (_updateUIDelegate != null)
+            {
+                _updateUIDelegate.updateOutputState(inEvent);
+            }
+        }
 
 
         /// <summary>

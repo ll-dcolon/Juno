@@ -36,7 +36,7 @@ namespace TestBed
     /// <summary>
     /// Represents the event when the toggle button is clicked
     /// </summary>
-    class ToggleLEDUIEvent : UIEvent
+    public class ToggleLEDUIEvent : UIEvent
     {
         /// <summary>
         /// Creates a ToggleUIEvent and sets its identifier to the correct value
@@ -51,7 +51,7 @@ namespace TestBed
     /// <summary>
     /// Represents the event when the connect button is clicked
     /// </summary>
-    class ConnectUIEvent : UIEvent
+    public class ConnectUIEvent : UIEvent
     {
         /// <summary>
         /// Creates a ConnectUIEvent and sets its identifier to the correct value
@@ -66,7 +66,7 @@ namespace TestBed
     /// <summary>
     /// Represents the event when the Flash LED button is clicked
     /// </summary>
-    class FlashLEDUIEvent : UIEvent
+    public class FlashLEDUIEvent : UIEvent
     {
         /// <summary>
         /// Creates the FlashLEDUIEvent and sets its identifier
@@ -82,7 +82,7 @@ namespace TestBed
     /// Represents the event when the user clicks one of the 
     /// LED change state buttons (On, Off)
     /// </summary>
-    class ChangeLEDStateUIEvent : UIEvent
+    public class ChangeLEDStateUIEvent : UIEvent
     {
         // The state we want to the LED to be in
         //true = high, false = low
@@ -105,7 +105,7 @@ namespace TestBed
     /// Represents the event when the toggle output button is clicked
     /// Also holds the output we want to toggle
     /// </summary>
-    class ToggleOutputUIEvent : UIEvent
+    public class ToggleOutputUIEvent : UIEvent
     {
         //The output we want to toggle
         public DIOPins _pinToToggle;
@@ -122,10 +122,43 @@ namespace TestBed
     }
 
 
+
+    /// <summary>
+    /// Represents the event when a user clicks to change an output value
+    /// </summary>
+    public class UpdateOutputUIEvent : UIEvent
+    {
+        public DIOPins _pinToUpdate;
+        public bool _shouldBeHigh;
+
+        public UpdateOutputUIEvent(DIOPins inPinToChange, bool inSetPinHigh)
+        {
+            identifier = UIEventIdentifier.UpdateOutput;
+            _pinToUpdate = inPinToChange;
+            _shouldBeHigh = inSetPinHigh;
+        }
+    }
+
+
+    public class QueryAnalogInputEvent : UIEvent
+    {
+        public AnalogPins _pinToQuery;
+        public QueryAnalogInputEvent(AnalogPins inPinToQuery)
+        {
+            _pinToQuery = inPinToQuery;
+            identifier = UIEventIdentifier.AnalogPinQuery;
+        }
+
+    }
+
+
+
+
+
     /// <summary>
     /// Represents the event which starts the test sequencer
     /// </summary>
-    class StartTestSequencerUIEvent : UIEvent
+    public class StartTestSequencerUIEvent : UIEvent
     {
         public StartTestSequencerUIEvent()
         {

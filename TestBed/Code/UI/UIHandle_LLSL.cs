@@ -160,6 +160,13 @@ namespace TestBed
                         log.Debug("Handling startTestSequence ui event");
                         handleStartTestSequencerClickedEvent();
                         break;
+                    case UIEventIdentifier.UpdateOutput:
+                        log.Debug("Handling updateOutput UI Event");
+                        UpdateOutputUIEvent updateOutput = (UpdateOutputUIEvent)newEvent;
+                        DIOPins pinToChange = updateOutput._pinToUpdate;
+                        bool shouldSetHigh = updateOutput._shouldBeHigh;
+                        handleUpdateOutputEvent(pinToChange, shouldSetHigh);
+                        break;
                     default:
                         break;
                 }
@@ -174,6 +181,7 @@ namespace TestBed
         private void handleChangeLEDStateClickedEvent(bool isHigh) { _logicalLayer.changeLEDState(isHigh); }
         private void handleToggleOutputClickedEvent(DIOPins pinToToggle) { _logicalLayer.toggleOutput(pinToToggle); }
         private void handleStartTestSequencerClickedEvent() { _startTestSequenceEvent.Set(); }
+        private void handleUpdateOutputEvent(DIOPins pinToChange, bool shouldSetHigh) { _logicalLayer.controlOutput(pinToChange, shouldSetHigh); }
 
 
 

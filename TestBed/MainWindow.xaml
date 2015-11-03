@@ -5,39 +5,38 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TestBed"
         mc:Ignorable="d"
-        Title="Test Bed" Height="350" Width="525">
-    <Grid RenderTransformOrigin="0.5,0.5">
-        <Grid.RenderTransform>
-            <TransformGroup>
-                <ScaleTransform/>
-                <SkewTransform/>
-                <RotateTransform Angle="0.444"/>
-                <TranslateTransform/>
-            </TransformGroup>
-        </Grid.RenderTransform>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="73*"/>
-            <ColumnDefinition Width="444*"/>
-        </Grid.ColumnDefinitions>
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="94" Margin="59,136,0,0" Stroke="Black" VerticalAlignment="Top" Width="315" Grid.Column="1"/>
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="147" Margin="23,83,0,0" Stroke="Black" VerticalAlignment="Top" Width="104" Grid.ColumnSpan="2"/>
-        <Button x:Name="flashLEDButton" Content="Flash LED" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="40,122,0,0" Click="flashLEDButton_Click" Grid.ColumnSpan="2"/>
-        <Button x:Name="connectButton" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="40,39,0,0" Height="22" Click="connectButton_Click" Grid.ColumnSpan="2"/>
-        <Button x:Name="toggleLEDButton" Content="Toggle LED" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="40,147,0,0" Grid.ColumnSpan="2" Click="toggleLEDButton_Click"/>
-        <Button x:Name="turnOnLEDButton" Content="Turn LED On" HorizontalAlignment="Left" Margin="40,172,0,0" VerticalAlignment="Top" Width="75" Grid.ColumnSpan="2" Click="turnOnLEDButton_Click"/>
-        <Button x:Name="turnOffLEDButton" Content="Turn LED Off" HorizontalAlignment="Left" Margin="40,197,0,0" VerticalAlignment="Top" Width="75" Grid.ColumnSpan="2" Click="turnOffLEDButton_Click"/>
-        <TextBlock x:Name="textBlock1" HorizontalAlignment="Left" Margin="50,92,0,0" TextWrapping="Wrap" Text="Board LED" VerticalAlignment="Top" Width="57" Grid.ColumnSpan="2"/>
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="48" Margin="59,83,0,0" Stroke="Black" VerticalAlignment="Top" Width="315" Grid.Column="1"/>
-        <Button x:Name="toggleOutput" Content="Toggle Output" Grid.Column="1" HorizontalAlignment="Left" Margin="67,95,0,0" VerticalAlignment="Top" Width="93" Height="22" Click="toggleOutput_Click"/>
-        <ComboBox x:Name="dioSelector" HorizontalAlignment="Left" VerticalAlignment="Top" Width="177" Grid.Column="1" Margin="176,95,0,0" SelectedIndex="0">
+        Title="Test Bed" Height="408.667" Width="738">
+    <Grid Margin="0,0,2,-3">
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="186" Margin="133,166,0,0" Stroke="Black" VerticalAlignment="Top" Width="305"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="40" Margin="133,116,0,0" Stroke="Black" VerticalAlignment="Top" Width="305"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="147" Margin="11,61,0,0" Stroke="Black" VerticalAlignment="Top" Width="117"/>
+        <Button x:Name="flashLEDButton" Content="Flash LED" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="33,100,0,0" Click="flashLEDButton_Click" Height="20" IsEnabled="False"/>
+        <Button x:Name="connectButton" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="10,10,0,0" Height="22" Click="connectButton_Click"/>
+        <Button x:Name="toggleLEDButton" Content="Toggle LED" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="33,125,0,0" Click="toggleLEDButton_Click" Height="20" IsEnabled="False"/>
+        <Button x:Name="turnOnLEDButton" Content="Turn LED On" HorizontalAlignment="Left" Margin="33,150,0,0" VerticalAlignment="Top" Width="75" Click="turnOnLEDButton_Click" Height="20" IsEnabled="False"/>
+        <Button x:Name="turnOffLEDButton" Content="Turn LED Off" HorizontalAlignment="Left" Margin="33,175,0,0" VerticalAlignment="Top" Width="75" Click="turnOffLEDButton_Click" Height="20" IsEnabled="False"/>
+        <TextBlock x:Name="textBlock1" HorizontalAlignment="Left" Margin="42,70,0,0" TextWrapping="Wrap" Text="Board LED" VerticalAlignment="Top" Width="57" Height="16" TextDecorations="Underline"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="48" Margin="133,61,0,0" Stroke="Black" VerticalAlignment="Top" Width="305"/>
+        <Button x:Name="toggleOutput" Content="Toggle Output" HorizontalAlignment="Left" Margin="148,75,0,0" VerticalAlignment="Top" Width="93" Height="22" Click="toggleOutput_Click" IsEnabled="False"/>
+        <ComboBox x:Name="dioSelector" HorizontalAlignment="Left" VerticalAlignment="Top" Width="177" Margin="253,75,0,0" SelectedIndex="0" Height="22">
             <TextBlock x:Name="textBlock_Copy" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Heater (AN1) (Red)" VerticalAlignment="Top"/>
             <TextBlock x:Name="textBlock" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Air Pump (AN0) (White)" VerticalAlignment="Top" Width="135"/>
             <TextBlock x:Name="textBlock_Copy1" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Water Pump (AN2) (Green)" VerticalAlignment="Top"/>
         </ComboBox>
-        <Button x:Name="startTestSequencerButton" Content="Start Test" Grid.Column="1" HorizontalAlignment="Left" Margin="72,172,0,0" VerticalAlignment="Top" Width="75" Click="startTestSequencerButton_Click"/>
-        <TextBlock x:Name="textBlock1_Copy" HorizontalAlignment="Left" Margin="72,143,0,0" TextWrapping="Wrap" Text="Sequencer" VerticalAlignment="Top" Width="57" Grid.Column="1"/>
-        <TextBlock x:Name="textBlock2" Grid.Column="1" HorizontalAlignment="Left" Margin="59,269,0,0" TextWrapping="Wrap" Text="Temp (F) :" VerticalAlignment="Top"/>
-        <TextBlock x:Name="voltageValue" Grid.Column="1" HorizontalAlignment="Left" Margin="116,269,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top"/>
-        <CheckBox x:Name="isConnected" Content="Connected" Grid.Column="1" HorizontalAlignment="Left" Margin="59,39,0,0" VerticalAlignment="Top" Height="22" Width="81" RenderTransformOrigin="0.234,0.497" IsEnabled="False"/>
+        <Button x:Name="startTestSequencerButton" Content="Start Test Sequence" HorizontalAlignment="Left" Margin="253,123,0,0" VerticalAlignment="Top" Width="177" Click="startTestSequencerButton_Click" Height="20" IsEnabled="False"/>
+        <TextBlock x:Name="textBlock1_Copy" HorizontalAlignment="Left" Margin="167,127,0,0" TextWrapping="Wrap" Text="Sequencer" VerticalAlignment="Top" Width="57" Height="16" TextDecorations="Underline"/>
+        <TextBlock x:Name="textBlock2" HorizontalAlignment="Left" Margin="150,207,0,0" TextWrapping="Wrap" Text="Temp (F) :" VerticalAlignment="Top" Height="16" Width="57"/>
+        <TextBlock x:Name="voltageValue" HorizontalAlignment="Left" Margin="212,207,0,0" TextWrapping="Wrap" Text="Connect to device to start reading" VerticalAlignment="Top" Height="16" Width="210"/>
+        <CheckBox x:Name="isConnected" Content="Connected" HorizontalAlignment="Left" Margin="90,10,0,0" VerticalAlignment="Top" Height="22" Width="81" RenderTransformOrigin="0.234,0.497" IsEnabled="False"/>
+        <TextBlock x:Name="textBlock3" HorizontalAlignment="Left" Margin="148,175,0,0" TextWrapping="Wrap" Text="Sensor Data" VerticalAlignment="Top" TextDecorations="Underline"/>
+        <TextBlock x:Name="connectionWarning" HorizontalAlignment="Left" Margin="90,26,0,0" TextWrapping="Wrap" Text="(Make sure device is connected before pressing connect)" VerticalAlignment="Top" Width="318" Foreground="Red"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="291" Margin="443,61,0,0" Stroke="Black" VerticalAlignment="Top" Width="269"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="139" Margin="10,213,0,0" Stroke="Black" VerticalAlignment="Top" Width="118"/>
+        <TextBlock x:Name="textBlock1_Copy1" HorizontalAlignment="Left" Margin="28,220,0,0" TextWrapping="Wrap" Text="Set Outputs" VerticalAlignment="Top" Width="67" Height="16" TextDecorations="Underline"/>
+        <CheckBox x:Name="heaterIOBox" Content="Heater" HorizontalAlignment="Left" Margin="24,261,0,0" VerticalAlignment="Top" Click="heaterIOBox_Clicked" IsEnabled="False"/>
+        <CheckBox x:Name="airIOBox" Content="Air Pump" HorizontalAlignment="Left" Margin="24,241,0,0" VerticalAlignment="Top" Click="airIOBox_Clicked" IsEnabled="False"/>
+        <CheckBox x:Name="waterIOBox" Content="Water Pump" HorizontalAlignment="Left" Margin="24,281,0,0" VerticalAlignment="Top" Click="waterIOBox_Clicked" IsEnabled="False"/>
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="252" Margin="451,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="253" IsEnabled="False"/>
+        <TextBlock x:Name="textBlock4" HorizontalAlignment="Left" Margin="451,70,0,0" TextWrapping="Wrap" Text="Notifications" VerticalAlignment="Top" Width="70" Height="16" TextDecorations="Underline"/>
     </Grid>
 </Window>

@@ -37,6 +37,9 @@ namespace TestBed
         /// </summary>
         /// <param name="inIsConnected">True if the device is connected, false if it is not</param>
         void updateConnectionStatus(bool inIsConnected);
+
+
+        void updateOutputState(UpdateOutputUIEvent inEvent);
     }
 
 
@@ -74,7 +77,6 @@ namespace TestBed
         /// </summary>
         private void InitializeScreenItems()
         {
-            voltageValue.Text = "????";
         }
 
 
@@ -199,6 +201,38 @@ namespace TestBed
         }
 
 
+        private void heaterIOBox_Clicked(object sender, RoutedEventArgs e)
+        {
+            bool shouldSetHigh = !(bool)heaterIOBox.IsChecked;
+            log.Info(string.Format("Clicked heater checkbox.  Checkbox.IsChecked = {0}", shouldSetHigh));
+            changeOutput(DIOPins.Heater_AN1, shouldSetHigh);
+        }
+
+        private void airIOBox_Clicked(object sender, RoutedEventArgs e)
+        {
+            bool shouldSetHigh = !(bool)airIOBox.IsChecked;
+            log.Info(string.Format("Clicked air checkbox.  Checkbox.IsChecked = {0}", shouldSetHigh));
+            changeOutput(DIOPins.AirPump_AN0, shouldSetHigh);
+        }
+
+        private void waterIOBox_Clicked(object sender, RoutedEventArgs e)
+        {
+            bool shouldSetHigh = !(bool)waterIOBox.IsChecked;
+            log.Info(string.Format("Clicked water checkbox.  Checkbox.IsChecked = {0}", shouldSetHigh));
+            changeOutput(DIOPins.WaterPump_AN2, shouldSetHigh);
+        }
+
+        private void changeOutput(DIOPins pinToChange, bool shouldSetHigh)
+        {
+            UpdateOutputUIEvent clickTarget = new UpdateOutputUIEvent(pinToChange, shouldSetHigh);
+            if (_uiDelegate != null)
+            {
+                log.Debug(string.Format("Adding UpdateOutputUIEvent (pin to set : {0} should set high : {1}) to UIProcessing queue", pinToChange, shouldSetHigh));
+                _uiDelegate.enqueueUIEvent(clickTarget);
+            }
+
+        }
+
 
 
 
@@ -214,15 +248,55 @@ namespace TestBed
         }
 
 
+        /// <summary>
+        /// Sets all the ui elements to be enabled if we just connected to the device
+        /// </summary>
+        /// <param name="inNewConnectionStatus">Our new connection status</param>
         public void updateConnectionStatus(bool inNewConnectionStatus)
         {
             if (inNewConnectionStatus)
             {
-                Dispatcher.Invoke((Action)delegate () { isConnected.IsChecked = true; });
+                Dispatcher.Invoke((Action)delegate () 
+                {
+                    isConnected.IsChecked = true;
+                    connectionWarning.Visibility = System.Windows.Visibility.Hidden;
+                    flashLEDButton.IsEnabled = true;
+                    toggleLEDButton.IsEnabled = true;
+                    turnOffLEDButton.IsEnabled = true;
+                    turnOnLEDButton.IsEnabled = true;
+                    heaterIOBox.IsEnabled = true;
+                    airIOBox.IsEnabled = true;
+                    waterIOBox.IsEnabled = true;
+                    startTestSequencerButton.IsEnabled = true;
+                    toggleOutput.IsEnabled = true;
+                });
             }
             else
             {
                 Dispatcher.Invoke((Action)delegate () { isConnected.IsChecked = false; });
+            }
+        }
+
+
+
+        public void updateOutputState(UpdateOutputUIEvent inEvent)
+        {
+            switch (inEvent._pinToUpdate)
+            {
+                case DIOPins.Heater_AN1:
+                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { heaterIOBox.IsChecked = false; }); }
+                    else { Dispatcher.Invoke((Action)delegate () { heaterIOBox.IsChecked = true; }); }
+                    break;
+                case DIOPins.AirPump_AN0:
+                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { airIOBox.IsChecked = false; }); }
+                    else { Dispatcher.Invoke((Action)delegate () { airIOBox.IsChecked = true; }); }
+                    break;
+                case DIOPins.WaterPump_AN2:
+                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { waterIOBox.IsChecked = false; }); }
+                    else { Dispatcher.Invoke((Action)delegate () { waterIOBox.IsChecked = true; }); }
+                    break;
+                default:
+                    break;
             }
         }
 

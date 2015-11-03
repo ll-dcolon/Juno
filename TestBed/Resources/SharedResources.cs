@@ -20,8 +20,10 @@ namespace TestBed
         ToggleLEDClicked,
         ChangeLEDStateClicked,
         ToggleOutputClicked,
-        StartTestSequencerClicked
-        
+        UpdateOutput,
+        StartTestSequencerClicked,
+        AnalogPinQuery
+
     };
 
 
@@ -36,6 +38,7 @@ namespace TestBed
         DigitalIControl,
         DigitalOControl,
         AnalogPinQuery
+
     };
 
 

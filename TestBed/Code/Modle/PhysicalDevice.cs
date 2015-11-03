@@ -33,6 +33,9 @@ namespace TestBed
         /// </summary>
         /// <param name="inNewTemp">The new temp data from the device in C</param>
         void newThermistorData(double inNewTemp);
+
+
+        void updateOutputSent(UpdateOutputUIEvent inEvent);
     }
 
 
@@ -197,41 +200,44 @@ namespace TestBed
         public void connectToDevice_PL()
         {
             log.Debug("Sending ping device message");
-            sendMessage(DeviceMessageIdentifier.PingDevice, buildMessage(new List<int> { 0x02, 0x27 }));
+            sendMessage(new ConnectUIEvent(),buildMessage(new List<int> { 0x02, 0x27 }));
         }
 
         public void flashLED_PL()
         {
             log.Debug("Sending flash led message");
-            sendMessage(DeviceMessageIdentifier.FlashLED, buildMessage(new List<int> {0x02, 0x28 }));
+            sendMessage(new FlashLEDUIEvent(), buildMessage(new List<int> {0x02, 0x28 }));
         }
 
         public void turnLEDOn_PL()
         {
             log.Debug("Sending ledControl message to turn the led on");
-            sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x00 }));
+            sendMessage(new ChangeLEDStateUIEvent(true), buildMessage(new List<int> { 0x03, 0x29, 0x00 }));
         }
 
         public void turnLEDOff_PL()
         {
             log.Debug("Sending ledControl message to turn the led off");
-            sendMessage(DeviceMessageIdentifier.LEDControl, buildMessage(new List<int> { 0x03, 0x29, 0x01 }));
+            sendMessage(new ChangeLEDStateUIEvent(false), buildMessage(new List<int> { 0x03, 0x29, 0x01 }));
         }
 
-        public void setOutputState(DIOPins pinToSet, bool shouldBeHigh)
+        public void setOutputState(UpdateOutputUIEvent inEvent)
         {
             int newPinState;
-            if (shouldBeHigh) newPinState = 0x01;
+            if (inEvent._shouldBeHigh) newPinState = 0x01;
             else newPinState = 0x00;
-            log.Debug(string.Format("Sending DigitalIOControl message to turn pin {0} to state {1}", (int)pinToSet, newPinState));
-            sendMessage(DeviceMessageIdentifier.DigitalOControl, buildMessage(new List<int> { 0x05, 0x35, (int)pinToSet, 0x00, newPinState }));
+            log.Debug(string.Format("Sending DigitalIOControl message to turn pin {0} to state {1}", (int)inEvent._pinToUpdate, newPinState));
+            sendMessage(inEvent, buildMessage(new List<int> { 0x05, 0x35, (int)inEvent._pinToUpdate, 0x00, newPinState }));
         }
 
-        public void queryAnalogChannel(AnalogPins pinToQuery)
+
+        public void queryAnalogChannel(QueryAnalogInputEvent inEvent)
         {
-            log.Debug(string.Format("Querying Analog pin {0}", pinToQuery));
-            sendMessage(DeviceMessageIdentifier.AnalogPinQuery, buildMessage(new List<int> {0x03, 0x50, (int)pinToQuery}));
+            log.Debug(string.Format("Querying Analog pin {0}", inEvent._pinToQuery));
+            sendMessage(inEvent, buildMessage(new List<int> {0x03, 0x50, (int)inEvent._pinToQuery}));
         }
+
+
 
 
         /// <summary>
@@ -258,14 +264,14 @@ namespace TestBed
         /// </summary>
         /// <param name="inMessageIdentifier">The type of message I am sending</param>
         /// <param name="inMessageToSend">The string to send</param>
-        private void sendMessage(DeviceMessageIdentifier inMessageIdentifier, string inMessageToSend)
+        private void sendMessage(UIEvent inEvent, string inMessageToSend)
         {
             log.Debug("Attempting to send message to device");
             if (_serialPort.IsOpen)
             {
                 lock(_lockDeviceComm)
                 {
-                    _numBytesInResponce = getResponceLength(inMessageIdentifier);
+                    _numBytesInResponce = getResponceLength(inEvent.identifier);
                     log.Debug(string.Format("Expecting {0} bytes from the device as a responce", _numBytesInResponce));
                     _incommingByteQueue = new ConcurrentQueue<byte[]>();
                     _canReceiveResponce = true;
@@ -277,14 +283,14 @@ namespace TestBed
                         log.Debug(string.Format("Received responce {0}", receivedResponce));
                         if (receivedResponce)
                         {
-                            processResponce(inMessageIdentifier, responce);
+                            processResponce(inEvent, responce);
                             _canReceiveResponce = false;
                         }
                     }
                     else
                     {
-                        log.Debug(string.Format("Sending command finished notification for command: {0}", inMessageIdentifier));
-                        sendCommandFinishedNotification(inMessageIdentifier);
+                        log.Debug(string.Format("Sending command finished notification for command: {0}", inEvent.identifier));
+                        sendCommandFinishedNotification(inEvent);
                         _canReceiveResponce = false;
                     }
                 }
@@ -342,12 +348,12 @@ namespace TestBed
         /// </summary>
         /// <param name="inMessageIdentifier">The message type we are sending</param>
         /// <param name="inResponce">The responce we recieved from the device</param>
-        private void processResponce(DeviceMessageIdentifier inMessageIdentifier, byte[] inResponce)
+        private void processResponce(UIEvent inEvent, byte[] inResponce)
         {
-            log.Debug(string.Format("Processing responce from message {0}", inMessageIdentifier));
-            switch (inMessageIdentifier)
+            log.Debug(string.Format("Processing responce from message {0}", inEvent.identifier));
+            switch (inEvent.identifier)
             {
-                case DeviceMessageIdentifier.PingDevice:
+                case UIEventIdentifier.ConnectClicked:
                     if (inResponce.Length == 1 && inResponce[0] == 0x59)
                     {
                         log.Debug("Received correct value for pind message");
@@ -363,7 +369,7 @@ namespace TestBed
                         }
                     }
                     break;
-                case DeviceMessageIdentifier.AnalogPinQuery:
+                case UIEventIdentifier.AnalogPinQuery:
                     double voltage = getThermistorVoltage(inResponce);
                     double resistance = getThermistorResistance(voltage);
                     double tempC = getTempInC(resistance);
@@ -373,13 +379,8 @@ namespace TestBed
                         deviceDelegate.newThermistorData(tempC);
                     }
                     break;
-                case DeviceMessageIdentifier.DigitalIControl:
-                case DeviceMessageIdentifier.DigitalOControl:
-                case DeviceMessageIdentifier.FlashLED:
-                case DeviceMessageIdentifier.LEDControl:
-                case DeviceMessageIdentifier.RelayControl:
                 default:
-                    log.Error(string.Format("Message type {0} does not expect a responce", inMessageIdentifier));
+                    log.Error(string.Format("Message type {0} does not expect a responce", inEvent.identifier));
                     break;
             }
         }
@@ -388,31 +389,24 @@ namespace TestBed
         /// <summary>
         /// Determines the expected responce length given the message type
         /// </summary>
-        /// <param name="inDeviceMessage">The type of message we are going to send</param>
+        /// <param name="eventIdentifier">The type of message we are going to send</param>
         /// <returns>The number of bytes (as a string) we expect to receive from the device</returns>
-        private int getResponceLength(DeviceMessageIdentifier inDeviceMessage)
+        private int getResponceLength(UIEventIdentifier inEventIdentifier)
         {
             int toReturn = 0;
-            log.Debug(string.Format("getting responce length for message type {0}", inDeviceMessage));
-            switch (inDeviceMessage)
+            log.Debug(string.Format("getting responce length for message type {0}", inEventIdentifier));
+            switch (inEventIdentifier)
             {
-                case DeviceMessageIdentifier.PingDevice:
-                case DeviceMessageIdentifier.DigitalIControl:
+                case UIEventIdentifier.ConnectClicked:
                     toReturn = 1;
                     break;
-                case DeviceMessageIdentifier.AnalogPinQuery:
+                case UIEventIdentifier.AnalogPinQuery:
                     toReturn = 2;
                     break;
-                case DeviceMessageIdentifier.FlashLED:
-                case DeviceMessageIdentifier.LEDControl:
-                case DeviceMessageIdentifier.RelayControl:
-                case DeviceMessageIdentifier.DigitalOControl:
-                    break;
                 default:
-                    log.Error(string.Format("Message type {0} has not been implemented", inDeviceMessage));
                     break;
             }
-            log.Debug(string.Format("returning responce length:{0} for message type {1}", toReturn, inDeviceMessage));
+            log.Debug(string.Format("returning responce length:{0} for message type {1}", toReturn, inEventIdentifier));
             return toReturn;
         }
 
@@ -422,7 +416,7 @@ namespace TestBed
         /// notify the logical layer that the message has been successfuly sent.
         /// </summary>
         /// <param name="inDeviceMessage">The type of message we sent</param>
-        public void sendCommandFinishedNotification(DeviceMessageIdentifier inDeviceMessage)
+        public void sendCommandFinishedNotification(UIEvent inEvent)
         {
             if (deviceDelegate == null)
             {
@@ -430,23 +424,20 @@ namespace TestBed
                 return;
             }
 
-            log.Debug(string.Format("Sending command finished notification for message type {0}", inDeviceMessage));
-            switch (inDeviceMessage)
+            log.Debug(string.Format("Sending command finished notification for message type {0}", inEvent.identifier));
+            switch (inEvent.identifier)
             {
 
-                case DeviceMessageIdentifier.FlashLED:
+                case UIEventIdentifier.FlashLEDClicked:
                     deviceDelegate.flashLEDSent();
                     break;
-                case DeviceMessageIdentifier.LEDControl:
+                case UIEventIdentifier.ToggleLEDClicked:
                     deviceDelegate.ledControlSent();
                     break;
-                case DeviceMessageIdentifier.RelayControl:
-                case DeviceMessageIdentifier.DigitalIControl:
-                case DeviceMessageIdentifier.DigitalOControl:
-                    log.Error("Have not implemented these methods for device notifications");
+                case UIEventIdentifier.UpdateOutput:
+                    deviceDelegate.updateOutputSent((UpdateOutputUIEvent)inEvent);
                     break;
                 default:
-                    log.Error("This message should not need the device completed notification because it expects a responce from the device");
                     break;
             }
         }
@@ -585,7 +576,7 @@ namespace TestBed
         {
             while (!_shouldStop)
             {
-                queryAnalogChannel(AnalogPins.Thermistor_AN5);
+                queryAnalogChannel(new QueryAnalogInputEvent(AnalogPins.Thermistor_AN5));
                 Thread.Sleep(MS_BETWEEN_QUERYS);
             }
         }
