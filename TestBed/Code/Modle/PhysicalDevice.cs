@@ -35,7 +35,19 @@ namespace TestBed
         void newThermistorData(double inNewTemp);
 
 
-        void updateOutputSent(UpdateOutputUIEvent inEvent);
+        /// <summary>
+        /// Tells the delegate that the update output message was successfuly sent for the specified event
+        /// </summary>
+        /// <param name="inEvent">The event that was sent</param>
+        void updateOutputSent(UpdateOutputEvent inEvent);
+
+
+        /// <summary>
+        /// Tells the delegate that there is new flowmeter data related to the specified event
+        /// </summary>
+        /// <param name="inEvent">The event that this rate relates to</param>
+        /// <param name="newFlowRate">The new flow rate</param>
+        void newFlowmeterData(Event inEvent, double newFlowRate);
     }
 
 
@@ -71,10 +83,24 @@ namespace TestBed
         //Threads used to continuously query sensors
         private Thread _thermistorVoltageThread;
 
+        //Thread to query flow meter counter
+        private Thread _flowmeterCounterThread;
+
+        //Queue to hold all the returned flow meter counter values
+        private Queue<int> _flowCounterQueue;
+
         //The number of ms to sleep between queries.
-        private const int MS_BETWEEN_QUERYS= 200;
+        private const int MS_BETWEEN_THERMISTOR_QUERYS= 200;
+        //The nubmer of ms to sleep between flowmeter counter queries
+        private const int MS_BETWEEN_FLOWMETER_QUERIES = 200;
+        //The number of elements that the fow meter queue can have
+        private const int MAX_NUMBER_FLOWMETER_QUEUE_ELEMENTS = 20;
         //The number of ms to wait for a responce
         private const int MS_TO_WAIT_FOR_RESPONCE = 3000;
+        //The number of ml represented by a pulse of the flow meter
+//        private const double ML_OF_WATER_PER_PULSE = 0.8394;
+        private const double ML_OF_WATER_PER_PULSE = 0.4197;
+
 
         //The voltage for the thermistor
         private const double THERMISTOR_VOLTAGE = 5.022;
@@ -92,8 +118,7 @@ namespace TestBed
         private volatile bool _hasStarted;
 
 
-        //Some stuff used for debug
-        private int _counter;
+        private int counter = 0;
 
 
         /// <summary>
@@ -104,14 +129,16 @@ namespace TestBed
             log.Debug(string.Format("Creating physicalLayer with config:{0}", inDeviceConfig));
             _deviceConfig = inDeviceConfig;
             _lockDeviceComm = new object();
+            _flowCounterQueue = new Queue<int>();
             _enqueueEvent = new AutoResetEvent(false);
             _canReceiveResponce = false;
             findSerialDevice();
 
+            //!@#
+            _incommingByteQueue = new ConcurrentQueue<byte[]>();
+
             _shouldStop = false;
             _hasStarted = false;
-
-            _counter = 0;
         }
 
 
@@ -135,6 +162,7 @@ namespace TestBed
         {
             _shouldStop = true;
             _thermistorVoltageThread.Join();
+            _flowmeterCounterThread.Join();
         }
 
 
@@ -175,12 +203,15 @@ namespace TestBed
             //These states must match the initial state of the pin dictionary in the logical layer
             //If you change something here, make sure you change it there too
             log.Debug("Setting the state of all the outputs");
-            //RA4
+            //AN0
             _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.AirPump_AN0, 0x00, 0x01 }));
-            //RB7
+            //AN2
             _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.WaterPump_AN2, 0x00, 0x01 }));
-            //RB6
+            //AN1
             _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.Heater_AN1, 0x00, 0x01 }));
+
+            //Set up event counter on RB6
+            _serialPort.Write(buildMessage(new List<int> { 0x04, 0x36, 0x06, 0x00 }));
         }
 
 
@@ -195,33 +226,34 @@ namespace TestBed
         }
 
 
+        //**********************************************************************************************************************************************************************
         //Wrappers around the sendMessage function.  A parameter to the sendMessage function are the actual bytes to send
         //This is where you can see what bytes im sending for what commands
         public void connectToDevice_PL()
         {
             log.Debug("Sending ping device message");
-            sendMessage(new ConnectUIEvent(),buildMessage(new List<int> { 0x02, 0x27 }));
+            sendMessage(new ConnectEvent(),buildMessage(new List<int> { 0x02, 0x27 }));
         }
 
         public void flashLED_PL()
         {
             log.Debug("Sending flash led message");
-            sendMessage(new FlashLEDUIEvent(), buildMessage(new List<int> {0x02, 0x28 }));
+            sendMessage(new FlashLEDEvent(), buildMessage(new List<int> {0x02, 0x28 }));
         }
 
         public void turnLEDOn_PL()
         {
             log.Debug("Sending ledControl message to turn the led on");
-            sendMessage(new ChangeLEDStateUIEvent(true), buildMessage(new List<int> { 0x03, 0x29, 0x00 }));
+            sendMessage(new ChangeLEDStateEvent(true), buildMessage(new List<int> { 0x03, 0x29, 0x00 }));
         }
 
         public void turnLEDOff_PL()
         {
             log.Debug("Sending ledControl message to turn the led off");
-            sendMessage(new ChangeLEDStateUIEvent(false), buildMessage(new List<int> { 0x03, 0x29, 0x01 }));
+            sendMessage(new ChangeLEDStateEvent(false), buildMessage(new List<int> { 0x03, 0x29, 0x01 }));
         }
 
-        public void setOutputState(UpdateOutputUIEvent inEvent)
+        public void setOutputState(UpdateOutputEvent inEvent)
         {
             int newPinState;
             if (inEvent._shouldBeHigh) newPinState = 0x01;
@@ -236,6 +268,14 @@ namespace TestBed
             log.Debug(string.Format("Querying Analog pin {0}", inEvent._pinToQuery));
             sendMessage(inEvent, buildMessage(new List<int> {0x03, 0x50, (int)inEvent._pinToQuery}));
         }
+
+
+        public void queryCounter(QueryCounterEvent inEvent)
+        {
+            log.Debug(string.Format("Querying Counter pin {0}", inEvent._pinToQuery));
+            sendMessage(inEvent, buildMessage(new List<int> { 0x3, 0x37, 0x06 }));
+        }
+        //**********************************************************************************************************************************************************************
 
 
 
@@ -264,7 +304,7 @@ namespace TestBed
         /// </summary>
         /// <param name="inMessageIdentifier">The type of message I am sending</param>
         /// <param name="inMessageToSend">The string to send</param>
-        private void sendMessage(UIEvent inEvent, string inMessageToSend)
+        private void sendMessage(Event inEvent, string inMessageToSend)
         {
             log.Debug("Attempting to send message to device");
             if (_serialPort.IsOpen)
@@ -273,7 +313,7 @@ namespace TestBed
                 {
                     _numBytesInResponce = getResponceLength(inEvent.identifier);
                     log.Debug(string.Format("Expecting {0} bytes from the device as a responce", _numBytesInResponce));
-                    _incommingByteQueue = new ConcurrentQueue<byte[]>();
+                    //_incommingByteQueue = new ConcurrentQueue<byte[]>();
                     _canReceiveResponce = true;
                     _serialPort.Write(inMessageToSend);
                     if (_numBytesInResponce> 0)
@@ -285,6 +325,7 @@ namespace TestBed
                         {
                             processResponce(inEvent, responce);
                             _canReceiveResponce = false;
+                            log.Debug("Should no longer receive a responce");
                         }
                     }
                     else
@@ -316,8 +357,14 @@ namespace TestBed
             int msToWait = MS_TO_WAIT_FOR_RESPONCE;
             if (_enqueueEvent.WaitOne(msToWait))
             {
-                _incommingByteQueue.TryDequeue(out outResponce);
+                if (_incommingByteQueue.Count == 0)
+                {
+                    throw new Exception();
+                    return false;
+                }
+                bool success = _incommingByteQueue.TryDequeue(out outResponce);
                 log.Debug(string.Format("Received a responce from the device.  Responce: {0}", outResponce));
+
                 if (outResponce.Length == inNumBytesToReceivce)
                 {
                     log.Debug(string.Format("Received responce of correct length. {0}",outResponce));
@@ -326,6 +373,7 @@ namespace TestBed
                 else
                 {
                     log.Error(string.Format("Received responce string:{0} - with length {1} but expected a string of length {2}", outResponce, outResponce.Length, inNumBytesToReceivce));
+                    throw new Exception();
                     return false;
                 }
 
@@ -333,112 +381,8 @@ namespace TestBed
             else
             {
                 log.Error(string.Format("Did not receive a responce in {0}ms", msToWait));
+                throw new Exception();
                 return false;
-            }
-        }
-
-
-
-        /// <summary>
-        /// Looks over the responce received from the device and tries to process it
-        /// 
-        /// Will continue until processing is complete.  This is the same thread that sent the message.
-        /// Try to limit processing as much as possible.  May eventually need to have another queue / processing thread.
-        /// For now thougn, we keep it simple
-        /// </summary>
-        /// <param name="inMessageIdentifier">The message type we are sending</param>
-        /// <param name="inResponce">The responce we recieved from the device</param>
-        private void processResponce(UIEvent inEvent, byte[] inResponce)
-        {
-            log.Debug(string.Format("Processing responce from message {0}", inEvent.identifier));
-            switch (inEvent.identifier)
-            {
-                case UIEventIdentifier.ConnectClicked:
-                    if (inResponce.Length == 1 && inResponce[0] == 0x59)
-                    {
-                        log.Debug("Received correct value for pind message");
-                        if (deviceDelegate != null)
-                        {
-                            log.Debug("Sending device connected to the delegate");
-                            deviceDelegate.deviceConnected();
-                        }
-                        if (!_hasStarted)
-                        {
-                            startSensorThreads();
-                            _hasStarted = true;
-                        }
-                    }
-                    break;
-                case UIEventIdentifier.AnalogPinQuery:
-                    double voltage = getThermistorVoltage(inResponce);
-                    double resistance = getThermistorResistance(voltage);
-                    double tempC = getTempInC(resistance);
-                    if (deviceDelegate != null)
-                    {
-                        log.Debug("Sending temp data to logical layer");
-                        deviceDelegate.newThermistorData(tempC);
-                    }
-                    break;
-                default:
-                    log.Error(string.Format("Message type {0} does not expect a responce", inEvent.identifier));
-                    break;
-            }
-        }
-
-
-        /// <summary>
-        /// Determines the expected responce length given the message type
-        /// </summary>
-        /// <param name="eventIdentifier">The type of message we are going to send</param>
-        /// <returns>The number of bytes (as a string) we expect to receive from the device</returns>
-        private int getResponceLength(UIEventIdentifier inEventIdentifier)
-        {
-            int toReturn = 0;
-            log.Debug(string.Format("getting responce length for message type {0}", inEventIdentifier));
-            switch (inEventIdentifier)
-            {
-                case UIEventIdentifier.ConnectClicked:
-                    toReturn = 1;
-                    break;
-                case UIEventIdentifier.AnalogPinQuery:
-                    toReturn = 2;
-                    break;
-                default:
-                    break;
-            }
-            log.Debug(string.Format("returning responce length:{0} for message type {1}", toReturn, inEventIdentifier));
-            return toReturn;
-        }
-
-
-        /// <summary>
-        /// Used for all commands that dont expect a responce from the device.  This lets the physical layer still
-        /// notify the logical layer that the message has been successfuly sent.
-        /// </summary>
-        /// <param name="inDeviceMessage">The type of message we sent</param>
-        public void sendCommandFinishedNotification(UIEvent inEvent)
-        {
-            if (deviceDelegate == null)
-            {
-                log.Error("Can not send command finished notification because the delegate is null");
-                return;
-            }
-
-            log.Debug(string.Format("Sending command finished notification for message type {0}", inEvent.identifier));
-            switch (inEvent.identifier)
-            {
-
-                case UIEventIdentifier.FlashLEDClicked:
-                    deviceDelegate.flashLEDSent();
-                    break;
-                case UIEventIdentifier.ToggleLEDClicked:
-                    deviceDelegate.ledControlSent();
-                    break;
-                case UIEventIdentifier.UpdateOutput:
-                    deviceDelegate.updateOutputSent((UpdateOutputUIEvent)inEvent);
-                    break;
-                default:
-                    break;
             }
         }
 
@@ -458,17 +402,25 @@ namespace TestBed
         /// <param name="e">SerialDataReceivedEventArgs</param>
         private void _serialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
+            log.Debug("Received something from the device");
             if (!_canReceiveResponce)
             {
                 SerialPort port = (SerialPort)sender;
-                log.Fatal(string.Format("Received responce from device when should not have.  Responce:{0}", port.ReadExisting()));
+                byte[] bytes = new byte[_numBytesInResponce];
+                port.Read(bytes, 0, _numBytesInResponce);
+                logBytesArray(bytes);
+                log.Fatal(string.Format("Received responce from device when should not have.  Responce:{0}", bytes));
                 throw new Exception();
             }
             try
             {
                 SerialPort port = (SerialPort)sender;
+                int bytesToRead = port.BytesToRead;
+                //Only read if the entire message is there
+                if (bytesToRead < _numBytesInResponce) return;
                 byte[] bytes = new byte[_numBytesInResponce];
                 port.Read(bytes, 0, _numBytesInResponce);
+                logBytesArray(bytes);
 
                 //string read = port.ReadExisting();
                 log.Debug(string.Format("Received string {0}", bytes));
@@ -485,6 +437,125 @@ namespace TestBed
 
 
 
+        /// <summary>
+        /// Looks over the responce received from the device and tries to process it
+        /// 
+        /// Will continue until processing is complete.  This is the same thread that sent the message.
+        /// Try to limit processing as much as possible.  May eventually need to have another queue / processing thread.
+        /// For now thougn, we keep it simple
+        /// </summary>
+        /// <param name="inMessageIdentifier">The message type we are sending</param>
+        /// <param name="inResponce">The responce we recieved from the device</param>
+        private void processResponce(Event inEvent, byte[] inResponce)
+        {
+            log.Debug(string.Format("Processing responce from message {0}", inEvent.identifier));
+            switch (inEvent.identifier)
+            {
+                case EventIdentifier.ConnectRequest:
+                    logBytesArray(inResponce);
+                    if (inResponce.Length == 1 && inResponce[0] == 0x59)
+                    {
+                        log.Debug("Received correct value for pind message");
+                        if (deviceDelegate != null)
+                        {
+                            log.Debug("Sending device connected to the delegate");
+                            deviceDelegate.deviceConnected();
+                        }
+                        if (!_hasStarted)
+                        {
+                            startSensorThreads();
+                            _hasStarted = true;
+                        }
+                    }
+                    break;
+                case EventIdentifier.AnalogPinQueryRequest:
+                    double voltage = getThermistorVoltage(inResponce);
+                    double resistance = getThermistorResistance(voltage);
+                    double tempC = getTempInC(resistance);
+                    if (deviceDelegate != null)
+                    {
+                        log.Debug("Sending temp data to logical layer");
+                        deviceDelegate.newThermistorData(tempC);
+                    }
+                    break;
+                case EventIdentifier.QueryCounterRequest:
+                    logBytesArray(inResponce);
+                    int responce = (inResponce[3] << 24) | (inResponce[2] << 16) | (inResponce[1] << 8) | (inResponce[0]) ;
+                    handleNewFlowmeterCounterValue(inEvent, responce);
+                    break;
+                default:
+                    log.Error(string.Format("Message type {0} does not expect a responce", inEvent.identifier));
+                    break;
+            }
+            log.Debug("Done processing responce");
+        }
+
+
+        /// <summary>
+        /// Determines the expected responce length given the message type
+        /// </summary>
+        /// <param name="eventIdentifier">The type of message we are going to send</param>
+        /// <returns>The number of bytes (as a string) we expect to receive from the device</returns>
+        private int getResponceLength(EventIdentifier inEventIdentifier)
+        {
+            int toReturn = 0;
+            log.Debug(string.Format("getting responce length for message type {0}", inEventIdentifier));
+            switch (inEventIdentifier)
+            {
+                case EventIdentifier.ConnectRequest:
+                    toReturn = 1;
+                    break;
+                case EventIdentifier.AnalogPinQueryRequest:
+                    toReturn = 2;
+                    break;
+                case EventIdentifier.QueryCounterRequest:
+                    toReturn = 4;
+                    break;
+                default:
+                    break;
+            }
+            log.Debug(string.Format("returning responce length:{0} for message type {1}", toReturn, inEventIdentifier));
+            return toReturn;
+        }
+
+
+        /// <summary>
+        /// Used for all commands that dont expect a responce from the device.  This lets the physical layer still
+        /// notify the logical layer that the message has been successfuly sent.
+        /// </summary>
+        /// <param name="inDeviceMessage">The type of message we sent</param>
+        public void sendCommandFinishedNotification(Event inEvent)
+        {
+            if (deviceDelegate == null)
+            {
+                log.Error("Can not send command finished notification because the delegate is null");
+                return;
+            }
+
+            log.Debug(string.Format("Sending command finished notification for message type {0}", inEvent.identifier));
+            switch (inEvent.identifier)
+            {
+
+                case EventIdentifier.FlashLEDRequest:
+                    deviceDelegate.flashLEDSent();
+                    break;
+                case EventIdentifier.ToggleLEDRequest:
+                    deviceDelegate.ledControlSent();
+                    break;
+                case EventIdentifier.UpdateOutputRequest:
+                    deviceDelegate.updateOutputSent((UpdateOutputEvent)inEvent);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
+
+
+
+
+
 
 
 
@@ -496,6 +567,11 @@ namespace TestBed
             _thermistorVoltageThread = new Thread(this.queryThermistorVoltage);
             _thermistorVoltageThread.Name = "thermistorVoltageThread";
             _thermistorVoltageThread.Start();
+
+
+            _flowmeterCounterThread = new Thread(this.queryFlowmeterCounter);
+            _flowmeterCounterThread.Name = "flowmeterCounterThread";
+            _flowmeterCounterThread.Start();
         }
 
 
@@ -565,19 +641,111 @@ namespace TestBed
 
 
 
-        //T2= T1* B/ln(R1/R2)  /  ( B/ln(R1/R2) - T1 )
 
+        private void handleNewFlowmeterCounterValue(Event inEvent, int newValue)
+        {
+            int frontValue = 0;
+            double secTimeInterval = 0;
+            int lastValue = 0;
+            double newFlowValue = 0;
+            if (_flowCounterQueue.Count == 0)
+            {
+                _flowCounterQueue.Enqueue(newValue);
+                return;
+            }
+            else if (_flowCounterQueue.Count < MAX_NUMBER_FLOWMETER_QUEUE_ELEMENTS)
+            {
+                frontValue = _flowCounterQueue.Peek();
+                secTimeInterval = _flowCounterQueue.Count * (MS_BETWEEN_FLOWMETER_QUERIES / 1000.0);
+            }
+            else
+            {
+                frontValue = _flowCounterQueue.Dequeue();
+                secTimeInterval = MAX_NUMBER_FLOWMETER_QUEUE_ELEMENTS * (MS_BETWEEN_FLOWMETER_QUERIES / 1000.0);
+            }
+            lastValue = _flowCounterQueue.ToArray()[_flowCounterQueue.Count - 1];
+            if (lastValue == newValue)
+            {
+                newFlowValue = 0;
+            }
+            else
+            {
+                _flowCounterQueue.Enqueue(newValue);
+                int different = getCounterDifference(newValue, frontValue);
+                double numberMl = different * ML_OF_WATER_PER_PULSE;
+                double rateMlPerSec = numberMl / secTimeInterval;
+                newFlowValue = rateMlPerSec;
+            }
+            if (deviceDelegate != null)
+            {
+                deviceDelegate.newFlowmeterData(inEvent, newFlowValue);
+            }
+        }
+
+
+
+        private int getCounterDifference(int toSubtractFrom, int toSubtract)
+        {
+            int toReturn = 0;
+            //Handle int roleover
+            if (toSubtractFrom < toSubtract)
+            {
+                int dif = Int32.MaxValue - toSubtract;
+                dif++;
+                toReturn = dif + toSubtractFrom;
+            }
+            else
+            {
+                toReturn = toSubtractFrom - toSubtract;
+            }
+            return toReturn;
+        }
+
+
+
+        /// <summary>
+        /// Helper message to log all the elements in a byte array
+        /// Used for debugging
+        /// </summary>
+        /// <param name="byteArray">The array to log the elements of</param>
+        private void logBytesArray(byte[] byteArray)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var b in byteArray)
+            {
+                sb.Append(string.Format("{0}, ", b));
+            }
+            log.Debug(string.Format("Bytes array : {0}", sb.ToString()));
+        }
 
 
 
 
         //******************************************************** Sensor Query Threads ************************************************************************//
+        /// <summary>
+        /// Continues to query the thermistor to find the temperature until the thread is told to stop
+        /// </summary>
         private void queryThermistorVoltage()
         {
             while (!_shouldStop)
             {
                 queryAnalogChannel(new QueryAnalogInputEvent(AnalogPins.Thermistor_AN5));
-                Thread.Sleep(MS_BETWEEN_QUERYS);
+                Thread.Sleep(MS_BETWEEN_THERMISTOR_QUERYS);
+            }
+        }
+
+
+
+        /// <summary>
+        /// Continuously querier the flowmeter counter to find the flow rate until the 
+        /// thread is told to stop
+        /// </summary>
+        private void queryFlowmeterCounter()
+        {
+            while (!_shouldStop)
+            {
+                queryCounter(new QueryCounterEvent(CounterPins.FlowMeter_RB6));
+                Thread.Sleep(MS_BETWEEN_FLOWMETER_QUERIES);
             }
         }
     }

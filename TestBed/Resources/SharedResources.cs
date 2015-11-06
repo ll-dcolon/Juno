@@ -7,37 +7,23 @@ using System.Threading.Tasks;
 namespace TestBed
 {
    
-    //Identifiers for all the UI events this program will throw
-    public enum UIEventIdentifier
+    //Identifiers for all the events this program will throw
+    public enum EventIdentifier
     {
         //Used for a superclass.  Should not use in your program
         GenericEvent,
 
         //Used when various buttons are clicked.  Look at the 
         //Ui and you can propably figure them out
-        ConnectClicked,
-        FlashLEDClicked,
-        ToggleLEDClicked,
-        ChangeLEDStateClicked,
-        ToggleOutputClicked,
-        UpdateOutput,
-        StartTestSequencerClicked,
-        AnalogPinQuery
-
-    };
-
-
-    //Identifiers for all the message types this program can send
-    //to the device
-    public enum DeviceMessageIdentifier
-    {
-        PingDevice,
-        FlashLED,
-        LEDControl,
-        RelayControl,
-        DigitalIControl,
-        DigitalOControl,
-        AnalogPinQuery
+        ConnectRequest,
+        FlashLEDRequest,
+        ToggleLEDRequest,
+        ChangeLEDStateRequest,
+        ToggleOutputRequest,
+        UpdateOutputRequest,
+        QueryCounterRequest,
+        StartTestSequencerRequest,
+        AnalogPinQueryRequest
 
     };
 
@@ -55,7 +41,13 @@ namespace TestBed
     public enum AnalogPins
     {
         Thermistor_AN5 = 0x05
-    }
+    };
+
+
+    public enum CounterPins
+    {
+        FlowMeter_RB6 = 0x06
+    };
 
 
 }

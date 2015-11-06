@@ -89,7 +89,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Code\Events\UIEvents.cs" />
+    <Compile Include="Code\Events\Events.cs" />
     <Compile Include="Code\UI\UIHandle_LLSL.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

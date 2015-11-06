@@ -19,6 +19,10 @@ namespace TestBed
         private LogicalLayer _logicalLayer;
 
 
+        //Used if the sequencer wants to update the UI
+        private UpdateUIInterface _uiDelegate;
+
+
 
         //Flag to stop the processing thread;
         private volatile bool _shouldStop;
@@ -26,7 +30,6 @@ namespace TestBed
         //Thread used for the basic sequencer testing
         private Thread _testSequencerThread;
         //Thread to monitor the voltage of the thermistor voltage divider
-        private Thread _voltageThread;
 
 
 
@@ -46,6 +49,18 @@ namespace TestBed
             startSequencerThreads();
         }
 
+
+        /// <summary>
+        /// Sets the sequencers UI delegate
+        /// </summary>
+        /// <param name="inNewUIDelegate">The new UI delegate</param>
+        public void setUIDelegate(UpdateUIInterface inNewUIDelegate)
+        {
+            _uiDelegate = inNewUIDelegate;
+        }
+
+
+
         /// <summary>
         /// Cleans up the object by requesting the processing thread stop
         /// </summary>
@@ -61,10 +76,6 @@ namespace TestBed
             _testSequencerThread = new Thread(this.testSequencer);
             _testSequencerThread.Name = "testSequencerThread";
             _testSequencerThread.Start();
-
-            _voltageThread = new Thread(this.voltageThread);
-            _voltageThread.Name = "voltageThread";
-            //_voltageThread.Start();
         }
 
         /// <summary>
@@ -75,21 +86,7 @@ namespace TestBed
             log.Debug("Requesting sequencer stop");
             _shouldStop = true;
             _testSequencerThread.Join();
-            _voltageThread.Join();
         }
-
-
-        private void voltageThread()
-        {
-            while (!_shouldStop)
-            {
-                Thread.Sleep(1000);
-
-
-            }
-        }
-
-
 
 
 
@@ -126,7 +123,8 @@ namespace TestBed
             int msToDelay = 350;
             while (!_shouldStop)
             {
-                _uiHandler.waitForStartTestSequenceClicked();
+                _uiHandler.waitForStartTestSequenceRequest();
+                if (_uiDelegate != null) { _uiDelegate.updateSequencerState(true); }
                 log.Info(string.Format("Running test sequener with a {0} ms delay metween commands", msToDelay));
                 log.Debug("TS - Connecting to device");
                 _logicalLayer.connectToDevice_LL();
@@ -202,6 +200,7 @@ namespace TestBed
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_AN2);
                 _logicalLayer.toggleLED_LL();
                 log.Info("Test sequencer finished successfully");
+                if (_uiDelegate != null) { _uiDelegate.updateSequencerState(false); }
             }
 
         }

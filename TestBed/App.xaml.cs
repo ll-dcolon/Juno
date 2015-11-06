@@ -44,6 +44,7 @@ namespace TestBed
             log.Debug("Setup main window");
             MainWindow wnd = new MainWindow();
             logicalLayer.setUIDelegate(wnd);
+            sequencer.setUIDelegate(wnd);
             wnd.setDelegate(uiHandle);
             wnd.Show();
         }

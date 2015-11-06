@@ -39,7 +39,21 @@ namespace TestBed
         void updateConnectionStatus(bool inIsConnected);
 
 
-        void updateOutputState(UpdateOutputUIEvent inEvent);
+        void updateOutputState(UpdateOutputEvent inEvent);
+
+
+        /// <summary>
+        /// Tells the UI is the sequencer is running or not
+        /// </summary>
+        /// <param name="isRunning">True if the sequencer is running</param>
+        void updateSequencerState(bool isRunning);
+
+
+        /// <summary>
+        /// Updates the flow rate displayed in the UI
+        /// </summary>
+        /// <param name="inNewFlowRate">The new flow rate</param>
+        void updateFlowRate(double inNewFlowRate);
     }
 
 
@@ -57,7 +71,7 @@ namespace TestBed
 
 
         //Used to let another object know when UI events happen        
-        private UIEventInterface _uiDelegate;
+        private EventInterface _uiDelegate;
 
 
 
@@ -84,7 +98,7 @@ namespace TestBed
         /// Sets the UI delegate to the supplied object
         /// </summary>
         /// <param name="inDelegate"></param>
-        public void setDelegate(UIEventInterface inDelegate)
+        public void setDelegate(EventInterface inDelegate)
         {
             log.Info(String.Format("Setting the MainWindows delegate: {0}", inDelegate));
             _uiDelegate = inDelegate;
@@ -102,55 +116,55 @@ namespace TestBed
         private void connectButton_Click(object sender, RoutedEventArgs e)
         {
             log.Info("Clicked the connect button");
-            ConnectUIEvent clickTarget = new ConnectUIEvent();
+            ConnectEvent clickTarget = new ConnectEvent();
             if (_uiDelegate != null)
             {
                 log.Debug("Adding clickk event to processing queue");
-                 _uiDelegate.enqueueUIEvent(clickTarget);
+                 _uiDelegate.enqueueEvent(clickTarget);
             }
         }
 
         private void flashLEDButton_Click(object sender, RoutedEventArgs e)
         {
             log.Info("Clicked the flashLED button");
-            FlashLEDUIEvent clickTarget = new FlashLEDUIEvent();
+            FlashLEDEvent clickTarget = new FlashLEDEvent();
             if (_uiDelegate != null)
             {
                 log.Debug("Adding the flashLED event to processing queue");
-                _uiDelegate.enqueueUIEvent(clickTarget);
+                _uiDelegate.enqueueEvent(clickTarget);
             }
         }
 
         private void turnOnLEDButton_Click(object sender, RoutedEventArgs e)
         {
             log.Info("Clicked the turnOnLED button");
-            ChangeLEDStateUIEvent clickTarget = new ChangeLEDStateUIEvent(true);
+            ChangeLEDStateEvent clickTarget = new ChangeLEDStateEvent(true);
             if (_uiDelegate != null)
             {
                 log.Debug("Adding the turnOnLED event to processing queue");
-                _uiDelegate.enqueueUIEvent(clickTarget);
+                _uiDelegate.enqueueEvent(clickTarget);
             }
         }
 
         private void turnOffLEDButton_Click(object sender, RoutedEventArgs e)
         {
             log.Info("Clicked the turnOffLED button");
-            ChangeLEDStateUIEvent clickTarget = new ChangeLEDStateUIEvent(false);
+            ChangeLEDStateEvent clickTarget = new ChangeLEDStateEvent(false);
             if (_uiDelegate != null)
             {
                 log.Debug("Adding the turnOffLED event to processing queue");
-                _uiDelegate.enqueueUIEvent(clickTarget);
+                _uiDelegate.enqueueEvent(clickTarget);
             }
         }
 
         private void toggleLEDButton_Click(object sender, RoutedEventArgs e)
         {
             log.Info("Clicked the toggleLED button");
-            ToggleLEDUIEvent clickTarget = new ToggleLEDUIEvent();
+            ToggleLEDEvent clickTarget = new ToggleLEDEvent();
             if (_uiDelegate != null)
             {
                 log.Debug("Adding the toggleLED event to processing queue");
-                _uiDelegate.enqueueUIEvent(clickTarget);
+                _uiDelegate.enqueueEvent(clickTarget);
             }
         }
 
@@ -177,11 +191,11 @@ namespace TestBed
                     log.Error(String.Format("Did not recognize selected port to toggle : {0}", targetOutput));
                     return;
             }
-            ToggleOutputUIEvent clickTarget = new ToggleOutputUIEvent(pinToToggle);
+            ToggleOutputEvent clickTarget = new ToggleOutputEvent(pinToToggle);
             if (_uiDelegate != null)
             {
                 log.Debug("Adding the toggleOutput event to the processing queue");
-                _uiDelegate.enqueueUIEvent(clickTarget);
+                _uiDelegate.enqueueEvent(clickTarget);
             }
         }
 
@@ -192,11 +206,11 @@ namespace TestBed
         private void startTestSequencerButton_Click(object sender, RoutedEventArgs e)
         {
             log.Info("Clicked the startTestSequence button");
-            StartTestSequencerUIEvent clickTarget = new StartTestSequencerUIEvent();
+            StartTestSequencerEvent clickTarget = new StartTestSequencerEvent();
             if (_uiDelegate != null)
             {
                 log.Debug("Adding the startTestSequence event to the processing queue");
-                _uiDelegate.enqueueUIEvent(clickTarget);
+                _uiDelegate.enqueueEvent(clickTarget);
             }
         }
 
@@ -224,11 +238,11 @@ namespace TestBed
 
         private void changeOutput(DIOPins pinToChange, bool shouldSetHigh)
         {
-            UpdateOutputUIEvent clickTarget = new UpdateOutputUIEvent(pinToChange, shouldSetHigh);
+            UpdateOutputEvent clickTarget = new UpdateOutputEvent(pinToChange, shouldSetHigh);
             if (_uiDelegate != null)
             {
-                log.Debug(string.Format("Adding UpdateOutputUIEvent (pin to set : {0} should set high : {1}) to UIProcessing queue", pinToChange, shouldSetHigh));
-                _uiDelegate.enqueueUIEvent(clickTarget);
+                log.Debug(string.Format("Adding UpdateOutputEvent (pin to set : {0} should set high : {1}) to UIProcessing queue", pinToChange, shouldSetHigh));
+                _uiDelegate.enqueueEvent(clickTarget);
             }
 
         }
@@ -260,15 +274,7 @@ namespace TestBed
                 {
                     isConnected.IsChecked = true;
                     connectionWarning.Visibility = System.Windows.Visibility.Hidden;
-                    flashLEDButton.IsEnabled = true;
-                    toggleLEDButton.IsEnabled = true;
-                    turnOffLEDButton.IsEnabled = true;
-                    turnOnLEDButton.IsEnabled = true;
-                    heaterIOBox.IsEnabled = true;
-                    airIOBox.IsEnabled = true;
-                    waterIOBox.IsEnabled = true;
-                    startTestSequencerButton.IsEnabled = true;
-                    toggleOutput.IsEnabled = true;
+                    updateUIEnabled(true);
                 });
             }
             else
@@ -278,8 +284,23 @@ namespace TestBed
         }
 
 
+        private void updateUIEnabled(bool isEnabled)
+        {
+            Console.WriteLine("Updating {0}", isEnabled);
+            flashLEDButton.IsEnabled = isEnabled;
+            toggleLEDButton.IsEnabled = isEnabled;
+            turnOffLEDButton.IsEnabled = isEnabled;
+            turnOnLEDButton.IsEnabled = isEnabled;
+            heaterIOBox.IsEnabled = isEnabled;
+            airIOBox.IsEnabled = isEnabled;
+            waterIOBox.IsEnabled = isEnabled;
+            startTestSequencerButton.IsEnabled = isEnabled;
+            toggleOutput.IsEnabled = isEnabled;
+            connectButton.IsEnabled = isEnabled;
+        }
 
-        public void updateOutputState(UpdateOutputUIEvent inEvent)
+
+        public void updateOutputState(UpdateOutputEvent inEvent)
         {
             switch (inEvent._pinToUpdate)
             {
@@ -300,5 +321,26 @@ namespace TestBed
             }
         }
 
+
+
+        public void updateSequencerState(bool isRunning)
+        {
+            if (isRunning)
+            {
+                Dispatcher.Invoke((Action)delegate () { updateUIEnabled(false); });
+            }
+            else
+            {
+                Dispatcher.Invoke((Action)delegate () { updateUIEnabled(true); });
+            }
+        }
+
+
+
+
+        public void updateFlowRate(double inNewFlowRate)
+        {
+            Dispatcher.Invoke((Action)delegate () { flowRateValue.Text = string.Format("{0}", inNewFlowRate); });
+        }
     }
 }

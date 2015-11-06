@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace TestBed
 {
@@ -29,6 +24,9 @@ namespace TestBed
         private double _currentWaterTemp;
         private object _waterTempLock;
 
+        private double _currentFlowRate;
+        private object _flowRateLock;
+
         //Lets the logical layer directly update the UI
         private UpdateUIInterface _updateUIDelegate;
 
@@ -47,6 +45,9 @@ namespace TestBed
 
             _currentWaterTemp = 0;
             _waterTempLock = new object();
+
+            _currentFlowRate = -1;
+            _flowRateLock = new object();
 
             //!@#Assumes the starting state for the device is all high.
             //I set this is the physical device start up
@@ -72,6 +73,8 @@ namespace TestBed
         /// <summary>
         /// Determines the current state of the LED and tells the physical layer to change
         ///  that state
+        /// Also saves the state of the led in a dedicated variable
+        /// Note: Assumes the commands is successful
         /// </summary>
         public void toggleLED_LL()
         {
@@ -86,6 +89,8 @@ namespace TestBed
 
         /// <summary>
         /// Tells the physical layer to flash the led
+        /// Sets the ledhigh varaible to true because the led always
+        /// Stops flashing in the high state
         /// </summary>
         public void flashLED_LL()
         {
@@ -101,8 +106,10 @@ namespace TestBed
         /// <summary>
         /// Tells the physical layer to change the state of the led to the 
         /// state of the input parameter
+        ///
+        /// Also updates the ledHigh variable
         /// </summary>
-        /// <param name="inIsHigh"></param>
+        /// <param name="inIsHigh">The state to set the led to</param>
         public void changeLEDState(bool inIsHigh)
         {
             log.Debug("Change led state");
@@ -141,15 +148,18 @@ namespace TestBed
         /// pin and tells the physical layer to put the pin in the oposite state
         /// 
         /// Then it updates the dictionary to the new state
+        ///
+        /// If a pin in passed in it will create a new event and then pass the
+        /// event to the designated responder
         /// </summary>
         /// <param name="pinToToggle"></param>
         public void toggleOutput(DIOPins pinToToggle)
         {
-            ToggleOutputUIEvent toggleOutputEvent = new ToggleOutputUIEvent(pinToToggle);
+            ToggleOutputEvent toggleOutputEvent = new ToggleOutputEvent(pinToToggle);
             toggleOutput(toggleOutputEvent);
         }
 
-        public void toggleOutput(ToggleOutputUIEvent inToggleOutputEvent)
+        public void toggleOutput(ToggleOutputEvent inToggleOutputEvent)
         {
             if (_deviceConnected)
             {
@@ -159,12 +169,12 @@ namespace TestBed
                 log.Debug(string.Format("Trying to set pin {0} with current state {1}, to state {2}", pinToToggle, currentState, !currentState));
                 if (currentState)
                 {
-                    _physicalLayer.setOutputState(new UpdateOutputUIEvent(inToggleOutputEvent._pinToToggle, false));
+                    _physicalLayer.setOutputState(new UpdateOutputEvent(inToggleOutputEvent._pinToToggle, false));
                     _pinStates.TryUpdate(pinToToggle, false, true);
                 }
                 else
                 {
-                    _physicalLayer.setOutputState(new UpdateOutputUIEvent(inToggleOutputEvent._pinToToggle, true));
+                    _physicalLayer.setOutputState(new UpdateOutputEvent(inToggleOutputEvent._pinToToggle, true));
                     _pinStates.TryUpdate(pinToToggle, true, false);
                 }
             }
@@ -174,15 +184,18 @@ namespace TestBed
 
         /// <summary>
         /// Lets you control the outputs
+        ///
+        /// If the user inputs a pin and state, then a new event is created and the event is
+        /// passed to the designated responder
         /// </summary>
         /// <param name="pinToChange">The pin you want to change the state of</param>
         /// <param name="inShouldSetHigh">The state you want the pin to take.  True = high, false = low</param>
         public void controlOutput(DIOPins pinToChange, bool inShouldSetHigh)
         {
-            controlOutput(new UpdateOutputUIEvent(pinToChange, inShouldSetHigh));
+            controlOutput(new UpdateOutputEvent(pinToChange, inShouldSetHigh));
         }
 
-        public void controlOutput(UpdateOutputUIEvent inEvent)
+        public void controlOutput(UpdateOutputEvent inEvent)
         {
             if (_deviceConnected)
             {
@@ -204,16 +217,27 @@ namespace TestBed
 
 
         /********************************** Physical Device Interface ********************************************/
+        /// <summary>
+        /// Tells the logical layer that the device has been successfully connected and pinged
+        /// </summary>
         public void deviceConnected()
         {
             log.Debug("Device is connected");
-            _deviceConnected = true;
-            if (_updateUIDelegate != null) _updateUIDelegate.updateConnectionStatus(true);
+            if (_deviceConnected == false)
+            {
+                _deviceConnected = true;
+                if (_updateUIDelegate != null) _updateUIDelegate.updateConnectionStatus(true);
+            }
         }
         public void flashLEDSent(){}
         public void ledControlSent(){}
 
-        public void updateOutputSent(UpdateOutputUIEvent inEvent)
+        /// <summary>
+        /// Tells the logical layer that the update output message was successfully sent
+        /// Allows the Logical layer to then update the ui with that information
+        /// </summary>
+        /// <param name="inEvent"></param>
+        public void updateOutputSent(UpdateOutputEvent inEvent)
         {
             if (_updateUIDelegate != null)
             {
@@ -225,7 +249,7 @@ namespace TestBed
         /// <summary>
         /// Fires every time the physical layer has new temp data from the device
         /// </summary>
-        /// <param name="inNewTemp"></param>
+        /// <param name="inNewTemp">The new temperature from the physical device</param>
         public void newThermistorData(double inNewTemp)
         {
             double roundedInput = Math.Round(inNewTemp, 1);
@@ -240,7 +264,29 @@ namespace TestBed
                     }
                 } 
             }
+        }
 
+        /// <summary>
+        /// Receives a message from the physical layer telling the new flow rate
+        /// associated with the specified flowmeter 
+        /// </summary>
+        /// <param name="inEvent">The event that the flow rate relates to</param>
+        /// <param name="inFlowRate">The new flow rate</param>
+        public void newFlowmeterData(Event inEvent, double inFlowRate)
+        {
+            double roundInput = Math.Round(inFlowRate, 2);
+            lock (_flowRateLock)
+            {
+                if (roundInput != _currentFlowRate)
+                {
+                    _currentFlowRate = roundInput;
+                    if (_updateUIDelegate != null)
+                    {
+                        _updateUIDelegate.updateFlowRate(_currentFlowRate);
+                    }
+                }
+            }
+            
         }
 
 
