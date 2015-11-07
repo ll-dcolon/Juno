@@ -36,7 +36,7 @@
         <CheckBox x:Name="heaterIOBox" Content="Heater" HorizontalAlignment="Left" Margin="24,261,0,0" VerticalAlignment="Top" Click="heaterIOBox_Clicked" IsEnabled="False"/>
         <CheckBox x:Name="airIOBox" Content="Air Pump" HorizontalAlignment="Left" Margin="24,241,0,0" VerticalAlignment="Top" Click="airIOBox_Clicked" IsEnabled="False"/>
         <CheckBox x:Name="waterIOBox" Content="Water Pump" HorizontalAlignment="Left" Margin="24,281,0,0" VerticalAlignment="Top" Click="waterIOBox_Clicked" IsEnabled="False"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="252" Margin="451,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="253" IsEnabled="False"/>
+        <TextBox x:Name="notes" HorizontalAlignment="Left" Height="252" Margin="451,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="253"/>
         <TextBlock x:Name="textBlock4" HorizontalAlignment="Left" Margin="451,70,0,0" TextWrapping="Wrap" Text="Notifications" VerticalAlignment="Top" Width="70" Height="16" TextDecorations="Underline"/>
         <TextBlock x:Name="textBlock5" HorizontalAlignment="Left" Margin="139,228,0,0" TextWrapping="Wrap" Text="Flow Rate (ml/sec) :" VerticalAlignment="Top"/>
         <TextBlock x:Name="flowRateValue" HorizontalAlignment="Left" Margin="245,228,0,0" TextWrapping="Wrap" Text="Connect to device to start reading" VerticalAlignment="Top" Width="185"/>

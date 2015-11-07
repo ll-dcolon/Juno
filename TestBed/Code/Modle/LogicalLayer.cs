@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace TestBed
 {
@@ -23,12 +24,15 @@ namespace TestBed
         //Used to keep track of the current water temperature
         private double _currentWaterTemp;
         private object _waterTempLock;
-
         private double _currentFlowRate;
         private object _flowRateLock;
 
         //Lets the logical layer directly update the UI
         private UpdateUIInterface _updateUIDelegate;
+
+        //Notifies the sequencer thread that there has been a new temp reading
+        private AutoResetEvent _newTempReadingNotification;
+
 
 
         /// <summary>
@@ -42,6 +46,7 @@ namespace TestBed
             _deviceConnected = false;
             _ledHigh = false;
             _pinStates = new ConcurrentDictionary<DIOPins, bool>();
+            _newTempReadingNotification = new AutoResetEvent(false);
 
             _currentWaterTemp = 0;
             _waterTempLock = new object();
@@ -258,6 +263,7 @@ namespace TestBed
                 if (roundedInput != _currentWaterTemp)
                 {
                     _currentWaterTemp = roundedInput;
+                    _newTempReadingNotification.Set();
                     if (_updateUIDelegate != null)
                     {
                         _updateUIDelegate.updateTempValue(roundedInput);
@@ -296,10 +302,39 @@ namespace TestBed
 
 
         /************************************ Sequencer Methods *************************************************/
-        //public bool waitForFlashLEDSent(int inMSToWait = 0)
-        //{
-        //    if (inMSToWait == 0){_flashLEDSignal.WaitOne(); return true; }
-        //    else{  return _flashLEDSignal.WaitOne(inMSToWait);}
-        //}
+        public bool waitForNewTempReading(int inMSToWait = 0)
+        {
+            if (inMSToWait == 0){_newTempReadingNotification.WaitOne(); return true; }
+            else{  return _newTempReadingNotification.WaitOne(inMSToWait);}
+        }
+
+
+        /// <summary>
+        /// Returns the current water temp in a thread safe way
+        /// </summary>
+        /// <returns>The current water temp in C</returns>
+        public double getCurrentWaterTemp()
+        {
+            double toReturn = 0;
+            lock (_waterTempLock)
+            {
+                toReturn = _currentWaterTemp;
+            }
+            return toReturn;
+        }
+
+
+        /// <summary>
+        /// Attempts to return the value of a pin.  If for some reason the dictionary can not get the value
+        /// it will throw an exception
+        /// </summary>
+        /// <param name="pin">The pin to get the state of</param>
+        /// <returns>True if the pin is high, false if it is not</returns>
+        public bool getPinState(DIOPins pin)
+        {
+            bool toReturn = false;
+            if (!_pinStates.TryGetValue(pin, out toReturn)) throw new Exception();
+            return toReturn;
+        }
     }
 }

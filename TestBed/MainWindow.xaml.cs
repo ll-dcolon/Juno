@@ -54,6 +54,13 @@ namespace TestBed
         /// </summary>
         /// <param name="inNewFlowRate">The new flow rate</param>
         void updateFlowRate(double inNewFlowRate);
+
+
+        /// <summary>
+        /// Adds a new note to the screen
+        /// </summary>
+        /// <param name="newNote">The note to add</param>
+        void appendNote(string newNote);
     }
 
 
@@ -91,6 +98,8 @@ namespace TestBed
         /// </summary>
         private void InitializeScreenItems()
         {
+            notes.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+            notes.TextWrapping = TextWrapping.Wrap;
         }
 
 
@@ -258,7 +267,7 @@ namespace TestBed
             string fValueString = string.Format("{0}", fValue);
 
             string bothStrings = string.Format("{0}f {1}c", fValue, inNewTemp);
-            Dispatcher.Invoke((Action)delegate(){ voltageValue.Text = fValueString; });
+            Dispatcher.Invoke((Action)delegate(){ voltageValue.Text = cValueString; });
         }
 
 
@@ -341,6 +350,13 @@ namespace TestBed
         public void updateFlowRate(double inNewFlowRate)
         {
             Dispatcher.Invoke((Action)delegate () { flowRateValue.Text = string.Format("{0}", inNewFlowRate); });
+        }
+
+
+
+        public void appendNote(string newNote)
+        {
+            Dispatcher.Invoke((Action)delegate () { notes.AppendText(newNote); });
         }
     }
 }

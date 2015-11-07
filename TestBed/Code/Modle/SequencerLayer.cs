@@ -23,13 +23,17 @@ namespace TestBed
         private UpdateUIInterface _uiDelegate;
 
 
+        //The max allowable temp for the heater to register in C
+        private const int MAX_HEATER_TEMP = 25;
 
         //Flag to stop the processing thread;
         private volatile bool _shouldStop;
 
         //Thread used for the basic sequencer testing
         private Thread _testSequencerThread;
-        //Thread to monitor the voltage of the thermistor voltage divider
+        //Thread to monitor the temerpature of the heater and shuts
+        //off power if the heater is too hot
+        private Thread _heaterMonitoringThread;
 
 
 
@@ -76,6 +80,10 @@ namespace TestBed
             _testSequencerThread = new Thread(this.testSequencer);
             _testSequencerThread.Name = "testSequencerThread";
             _testSequencerThread.Start();
+
+            _heaterMonitoringThread = new Thread(this.heaterMonitorThread);
+            _heaterMonitoringThread.Name = "heaterMonitoringThread";
+            _heaterMonitoringThread.Start();
         }
 
         /// <summary>
@@ -86,6 +94,7 @@ namespace TestBed
             log.Debug("Requesting sequencer stop");
             _shouldStop = true;
             _testSequencerThread.Join();
+            _heaterMonitoringThread.Join();
         }
 
 
@@ -124,7 +133,11 @@ namespace TestBed
             while (!_shouldStop)
             {
                 _uiHandler.waitForStartTestSequenceRequest();
-                if (_uiDelegate != null) { _uiDelegate.updateSequencerState(true); }
+                if (_uiDelegate != null)
+                {
+                    _uiDelegate.updateSequencerState(true);
+                    _uiDelegate.appendNote(string.Format("Start Sequencer\n"));
+                }
                 log.Info(string.Format("Running test sequener with a {0} ms delay metween commands", msToDelay));
                 log.Debug("TS - Connecting to device");
                 _logicalLayer.connectToDevice_LL();
@@ -200,9 +213,40 @@ namespace TestBed
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_AN2);
                 _logicalLayer.toggleLED_LL();
                 log.Info("Test sequencer finished successfully");
-                if (_uiDelegate != null) { _uiDelegate.updateSequencerState(false); }
+                if (_uiDelegate != null)
+                {
+                    _uiDelegate.updateSequencerState(false);
+                    _uiDelegate.appendNote(string.Format("End Sequencer\n"));
+                }
             }
+        }
 
+
+
+        /// <summary>
+        /// Makes sure the heater does not overheat
+        /// </summary>
+        private void heaterMonitorThread()
+        {
+            while (!_shouldStop)
+            {
+                _logicalLayer.waitForNewTempReading();
+                double currentTemp = _logicalLayer.getCurrentWaterTemp();
+                if (currentTemp >= MAX_HEATER_TEMP)
+                {
+                    //Turn on the heater if its too hot
+                    bool currentHeaterPinState = _logicalLayer.getPinState(DIOPins.Heater_AN1);
+
+                    if (currentHeaterPinState == false)
+                    {
+                        _logicalLayer.controlOutput(DIOPins.Heater_AN1, true);
+                        if (_uiDelegate != null)
+                        {
+                          _uiDelegate.appendNote("Heater is too hot, turning it off now\n");
+                        }
+                    }
+                }
+            }
         }
     }
 }
