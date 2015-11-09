@@ -48,6 +48,13 @@ namespace TestBed
         /// <param name="inEvent">The event that this rate relates to</param>
         /// <param name="newFlowRate">The new flow rate</param>
         void newFlowmeterData(Event inEvent, double newFlowRate);
+
+
+        /// <summary>
+        /// Tells the delegate that there is new pressure sensor datad
+        /// </summary>
+        /// <param name="newPressureReading">The new pressure reading</param>
+        void newPressureData(double newPressureReading);
     }
 
 
@@ -83,6 +90,8 @@ namespace TestBed
         //Threads used to continuously query sensors
         private Thread _thermistorVoltageThread;
 
+        private Thread _pressureSensorThread;
+
         //Thread to query flow meter counter
         private Thread _flowmeterCounterThread;
 
@@ -93,6 +102,8 @@ namespace TestBed
         private const int MS_BETWEEN_THERMISTOR_QUERYS= 200;
         //The nubmer of ms to sleep between flowmeter counter queries
         private const int MS_BETWEEN_FLOWMETER_QUERIES = 200;
+        //The number of ms to sleep between pressure sensor queries
+        private const int MS_BETWEEN_PRESSURE_QUERIES = 200;
         //The number of elements that the fow meter queue can have
         private const int MAX_NUMBER_FLOWMETER_QUEUE_ELEMENTS = 20;
         //The number of ms to wait for a responce
@@ -102,8 +113,13 @@ namespace TestBed
         private const double ML_OF_WATER_PER_PULSE = 0.4197;
 
 
+        //Theta 0 and Theta 1 for mressure sensor line
+        private const double _yIntercept = -26.906;
+        private const double _slope = 24.757;
+
+
         //The voltage for the thermistor
-        private const double THERMISTOR_VOLTAGE = 5.022;
+        private const double REF_VOLTAGE = 5.022;
         //The resistance used for R2 in the voltage divider
         private const int VOLTAGE_DIVIDER_RESISTANCE = 47000;
         //THermistor reference resistance 
@@ -163,6 +179,7 @@ namespace TestBed
             _shouldStop = true;
             _thermistorVoltageThread.Join();
             _flowmeterCounterThread.Join();
+            _pressureSensorThread.Join();
         }
 
 
@@ -469,13 +486,29 @@ namespace TestBed
                     }
                     break;
                 case EventIdentifier.AnalogPinQueryRequest:
-                    double voltage = getThermistorVoltage(inResponce);
-                    double resistance = getThermistorResistance(voltage);
-                    double tempC = getTempInC(resistance);
-                    if (deviceDelegate != null)
+                    QueryAnalogInputEvent queryAnalogEvent = (QueryAnalogInputEvent)inEvent;
+                    double voltage = getAnalogPinVoltage(inResponce);
+                    if (queryAnalogEvent._pinToQuery == AnalogPins.Thermistor_AN5)
                     {
-                        log.Debug("Sending temp data to logical layer");
-                        deviceDelegate.newThermistorData(tempC);
+                        double resistance = getThermistorResistance(voltage);
+                        double tempC = getTempInC(resistance);
+                        if (deviceDelegate != null)
+                        {
+                            log.Debug("Sending temp data to logical layer");
+                            deviceDelegate.newThermistorData(tempC);
+                        }
+                    }
+                    else if (queryAnalogEvent._pinToQuery == AnalogPins.Pressure_AN4)
+                    {
+                        voltage = Math.Round(voltage, 2);
+                        double pressure = (_slope * voltage) + _yIntercept;
+                        Console.WriteLine("Pressure:{0}", pressure);
+                        log.Debug(string.Format("Received pressure reading : {0}", pressure));
+                        if (deviceDelegate != null)
+                        {
+                            log.Debug("Sending new pressure data to delegate");
+                            deviceDelegate.newPressureData(pressure);
+                        }
                     }
                     break;
                 case EventIdentifier.QueryCounterRequest:
@@ -572,6 +605,11 @@ namespace TestBed
             _flowmeterCounterThread = new Thread(this.queryFlowmeterCounter);
             _flowmeterCounterThread.Name = "flowmeterCounterThread";
             _flowmeterCounterThread.Start();
+
+
+            _pressureSensorThread = new Thread(this.queryPressureSensorVoltage);
+            _pressureSensorThread.Name = "pressureSensorThread";
+            _pressureSensorThread.Start();
         }
 
 
@@ -582,7 +620,7 @@ namespace TestBed
         /// </summary>
         /// <param name="inData">The data received from the device</param>
         /// <returns></returns>
-        private double getThermistorVoltage(byte[] inData)
+        private double getAnalogPinVoltage(byte[] inData)
         {
             if (inData.Length != 2)
             {
@@ -596,7 +634,7 @@ namespace TestBed
             int combinedData = (int)secondByte << 8;
             combinedData |= firstByte;
             double temp = (double)combinedData / 1020;
-            double voltage = temp * THERMISTOR_VOLTAGE;
+            double voltage = temp * REF_VOLTAGE;
             return voltage;
         }
 
@@ -609,7 +647,7 @@ namespace TestBed
         /// <returns>The resistance of the thermistor</returns>
         private double getThermistorResistance(double inVoltage)
         {
-            double numerator = VOLTAGE_DIVIDER_RESISTANCE * THERMISTOR_VOLTAGE;
+            double numerator = VOLTAGE_DIVIDER_RESISTANCE * REF_VOLTAGE;
             double divide = numerator/ inVoltage;
             double resistance = divide - VOLTAGE_DIVIDER_RESISTANCE;
             return resistance;
@@ -684,6 +722,14 @@ namespace TestBed
 
 
 
+        private void handleNewPressureSensorValue(double pressure)
+        {
+
+
+        }
+
+
+
         private int getCounterDifference(int toSubtractFrom, int toSubtract)
         {
             int toReturn = 0;
@@ -746,6 +792,19 @@ namespace TestBed
             {
                 queryCounter(new QueryCounterEvent(CounterPins.FlowMeter_RB6));
                 Thread.Sleep(MS_BETWEEN_FLOWMETER_QUERIES);
+            }
+        }
+
+
+        /// <summary>
+        /// Continuously queries the pressure sensor voltage
+        /// </summary>
+        private void queryPressureSensorVoltage()
+        {
+            while (!_shouldStop)
+            {
+                queryAnalogChannel(new QueryAnalogInputEvent(AnalogPins.Pressure_AN4));
+                Thread.Sleep(MS_BETWEEN_PRESSURE_QUERIES);
             }
         }
     }

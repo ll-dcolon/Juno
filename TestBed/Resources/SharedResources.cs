@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TestBed
 {
-   
+
     //Identifiers for all the events this program will throw
     public enum EventIdentifier
     {
@@ -40,7 +40,8 @@ namespace TestBed
     //THe names of the analog pins
     public enum AnalogPins
     {
-        Thermistor_AN5 = 0x05
+        Thermistor_AN5 = 0x05,
+        Pressure_AN4 = 0x04
     };
 
 
@@ -48,6 +49,32 @@ namespace TestBed
     {
         FlowMeter_RB6 = 0x06
     };
+
+
+
+
+    /// <summary>
+    /// Returns the value to set the pin to in order for the device associated with that pin to be on
+    /// For example, if you have to set a pin low to turn an LED on, then passing the LED pin
+    /// into this function will return false, because a pin value of false turns the LED on
+    /// </summary>
+    public static class HelperMethods
+    {
+        public static bool getDeviceOnState(DIOPins pinToSetOn)
+        {
+            switch (pinToSetOn)
+            {
+                case DIOPins.Heater_AN1:
+                    return false;
+                case DIOPins.AirPump_AN0:
+                    return false;
+                case DIOPins.WaterPump_AN2:
+                    return false;
+                default:
+                    throw new Exception();
+            }
+        }
+    }
 
 
 }

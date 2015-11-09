@@ -61,6 +61,13 @@ namespace TestBed
         /// </summary>
         /// <param name="newNote">The note to add</param>
         void appendNote(string newNote);
+
+
+        /// <summary>
+        /// Updated the displayed pressure value
+        /// </summary>
+        /// <param name="inNewPressureValue">The new pressure reading to be displayed</param>
+        void updatePressureValue(double inNewPressureValue);
     }
 
 
@@ -357,6 +364,12 @@ namespace TestBed
         public void appendNote(string newNote)
         {
             Dispatcher.Invoke((Action)delegate () { notes.AppendText(newNote); });
+        }
+
+
+        public void updatePressureValue(double inNewPressureValue)
+        {
+            Dispatcher.Invoke((Action)delegate () { pressureValue.Text = string.Format("{0}", inNewPressureValue); });
         }
     }
 }

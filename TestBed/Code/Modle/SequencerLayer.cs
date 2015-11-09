@@ -143,9 +143,9 @@ namespace TestBed
                 _logicalLayer.connectToDevice_LL();
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Turning off all the outputs");
-                _logicalLayer.controlOutput(DIOPins.Heater_AN1, true);
-                _logicalLayer.controlOutput(DIOPins.AirPump_AN0, true);
-                _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, true);
+                _logicalLayer.controlOutput(DIOPins.Heater_AN1, !HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
+                _logicalLayer.controlOutput(DIOPins.AirPump_AN0, !HelperMethods.getDeviceOnState(DIOPins.AirPump_AN0));
+                _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, !HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Flashing the main LED");
                 _logicalLayer.flashLED_LL();
@@ -237,9 +237,9 @@ namespace TestBed
                     //Turn on the heater if its too hot
                     bool currentHeaterPinState = _logicalLayer.getPinState(DIOPins.Heater_AN1);
 
-                    if (currentHeaterPinState == false)
+                    if (currentHeaterPinState == HelperMethods.getDeviceOnState(DIOPins.Heater_AN1))
                     {
-                        _logicalLayer.controlOutput(DIOPins.Heater_AN1, true);
+                        _logicalLayer.controlOutput(DIOPins.Heater_AN1, !HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
                         if (_uiDelegate != null)
                         {
                           _uiDelegate.appendNote("Heater is too hot, turning it off now\n");

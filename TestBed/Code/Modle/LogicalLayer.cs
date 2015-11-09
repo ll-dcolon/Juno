@@ -26,6 +26,8 @@ namespace TestBed
         private object _waterTempLock;
         private double _currentFlowRate;
         private object _flowRateLock;
+        private double _currentPressureValue;
+        private object _pressureLock;
 
         //Lets the logical layer directly update the UI
         private UpdateUIInterface _updateUIDelegate;
@@ -53,6 +55,9 @@ namespace TestBed
 
             _currentFlowRate = -1;
             _flowRateLock = new object();
+
+            _currentPressureValue = -1;
+            _pressureLock = new object();
 
             //!@#Assumes the starting state for the device is all high.
             //I set this is the physical device start up
@@ -295,6 +300,24 @@ namespace TestBed
             
         }
 
+
+
+        public void newPressureData(double newPressureData)
+        {
+            double roundedInput = Math.Round(newPressureData, 2);
+            lock (_pressureLock)
+            {
+                if (roundedInput != _currentPressureValue)
+                {
+                    _currentPressureValue = roundedInput;
+                    if (_updateUIDelegate != null)
+                    {
+                        _updateUIDelegate.updatePressureValue(roundedInput);
+                    }
+                }
+            }
+
+        }
 
 
 

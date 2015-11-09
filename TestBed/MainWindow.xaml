@@ -40,5 +40,7 @@
         <TextBlock x:Name="textBlock4" HorizontalAlignment="Left" Margin="451,70,0,0" TextWrapping="Wrap" Text="Notifications" VerticalAlignment="Top" Width="70" Height="16" TextDecorations="Underline"/>
         <TextBlock x:Name="textBlock5" HorizontalAlignment="Left" Margin="139,228,0,0" TextWrapping="Wrap" Text="Flow Rate (ml/sec) :" VerticalAlignment="Top"/>
         <TextBlock x:Name="flowRateValue" HorizontalAlignment="Left" Margin="245,228,0,0" TextWrapping="Wrap" Text="Connect to device to start reading" VerticalAlignment="Top" Width="185"/>
+        <TextBlock x:Name="textBlock5_Copy" HorizontalAlignment="Left" Margin="139,249,0,0" TextWrapping="Wrap" Text="Pressure (psi) :" VerticalAlignment="Top"/>
+        <TextBlock x:Name="pressureValue" HorizontalAlignment="Left" Margin="245,249,0,0" TextWrapping="Wrap" Text="Connect to device to start reading" VerticalAlignment="Top" Width="185"/>
     </Grid>
 </Window>
