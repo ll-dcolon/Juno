@@ -45,6 +45,7 @@ namespace TestBed
     };
 
 
+    //Pins that can be used as event counters
     public enum CounterPins
     {
         FlowMeter_RB6 = 0x06

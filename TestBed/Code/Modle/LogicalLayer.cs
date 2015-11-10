@@ -302,6 +302,12 @@ namespace TestBed
 
 
 
+        /// <summary>
+        /// Receices a message from the physical layer telling the new pressure data
+        /// If the data is different than the previous value, it will update the 
+        /// current value and tell its UI delegate
+        /// </summary>
+        /// <param name="newPressureData">The new pressure data</param>
         public void newPressureData(double newPressureData)
         {
             double roundedInput = Math.Round(newPressureData, 2);

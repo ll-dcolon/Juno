@@ -190,11 +190,21 @@ namespace TestBed
 
 
         //*************************************** Sequencer Methods **********************************************//
+
+        /// <summary>
+        /// Stops the sequencer thread until the the startTestSequencerEvent occures.  Or until the 
+        /// supplied timeout is reached
+        /// </summary>
+        /// <param name="inMSToWait">The time in ms to wait before moving on</param>
+        /// <returns>True if the even occured, false if the timeout was reached</returns>
         public bool waitForStartTestSequenceRequest(int inMSToWait = 0)
         {
             log.Debug("Waiting for start test to be clicked");
             if (inMSToWait == 0){_startTestSequenceEvent.WaitOne(); return true; }
-            else{  return _startTestSequenceEvent.WaitOne(inMSToWait);}
+            else{
+                log.Debug("Start test was not clicked");
+                return _startTestSequenceEvent.WaitOne(inMSToWait);
+            }
         }
 
     }

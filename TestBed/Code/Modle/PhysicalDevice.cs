@@ -134,9 +134,6 @@ namespace TestBed
         private volatile bool _hasStarted;
 
 
-        private int counter = 0;
-
-
         /// <summary>
         /// Creates a new physical device object and attempt to open the serial port
         /// </summary>
@@ -149,8 +146,6 @@ namespace TestBed
             _enqueueEvent = new AutoResetEvent(false);
             _canReceiveResponce = false;
             findSerialDevice();
-
-            //!@#
             _incommingByteQueue = new ConcurrentQueue<byte[]>();
 
             _shouldStop = false;
@@ -330,7 +325,6 @@ namespace TestBed
                 {
                     _numBytesInResponce = getResponceLength(inEvent.identifier);
                     log.Debug(string.Format("Expecting {0} bytes from the device as a responce", _numBytesInResponce));
-                    //_incommingByteQueue = new ConcurrentQueue<byte[]>();
                     _canReceiveResponce = true;
                     _serialPort.Write(inMessageToSend);
                     if (_numBytesInResponce> 0)
@@ -377,7 +371,6 @@ namespace TestBed
                 if (_incommingByteQueue.Count == 0)
                 {
                     throw new Exception();
-                    return false;
                 }
                 bool success = _incommingByteQueue.TryDequeue(out outResponce);
                 log.Debug(string.Format("Received a responce from the device.  Responce: {0}", outResponce));
@@ -391,15 +384,12 @@ namespace TestBed
                 {
                     log.Error(string.Format("Received responce string:{0} - with length {1} but expected a string of length {2}", outResponce, outResponce.Length, inNumBytesToReceivce));
                     throw new Exception();
-                    return false;
                 }
-
             }
             else
             {
                 log.Error(string.Format("Did not receive a responce in {0}ms", msToWait));
                 throw new Exception();
-                return false;
             }
         }
 
@@ -439,7 +429,6 @@ namespace TestBed
                 port.Read(bytes, 0, _numBytesInResponce);
                 logBytesArray(bytes);
 
-                //string read = port.ReadExisting();
                 log.Debug(string.Format("Received string {0}", bytes));
                 _incommingByteQueue.Enqueue(bytes);
                 _enqueueEvent.Set();
@@ -502,7 +491,6 @@ namespace TestBed
                     {
                         voltage = Math.Round(voltage, 2);
                         double pressure = (_slope * voltage) + _yIntercept;
-                        Console.WriteLine("Pressure:{0}", pressure);
                         log.Debug(string.Format("Received pressure reading : {0}", pressure));
                         if (deviceDelegate != null)
                         {
@@ -680,6 +668,18 @@ namespace TestBed
 
 
 
+        /// <summary>
+        /// Handles the rolling average of flow meter counter events and returns the new flow rate
+        /// in ml per second
+        /// 
+        /// It handles the first value into the queue, then handles filling up the queue, then all subsiquent values
+        /// THe first value simple goes in
+        /// As the queue is filling up the values are averaged only over the timespan that we have been sampling
+        /// When the queue is full then we average over all the time represented by the queue
+        /// The the flow stops we imediatly stop entering values into the queue.
+        /// </summary>
+        /// <param name="inEvent">The event associated with this information</param>
+        /// <param name="newValue">The new counter value</param>
         private void handleNewFlowmeterCounterValue(Event inEvent, int newValue)
         {
             int frontValue = 0;
@@ -722,14 +722,13 @@ namespace TestBed
 
 
 
-        private void handleNewPressureSensorValue(double pressure)
-        {
 
-
-        }
-
-
-
+        /// <summary>
+        /// Get the difference between 2 numbers in a roleover safe way
+        /// </summary>
+        /// <param name="toSubtractFrom">in the statement a - b, this is a</param>
+        /// <param name="toSubtract">in the statement a - b, this is b</param>
+        /// <returns></returns>
         private int getCounterDifference(int toSubtractFrom, int toSubtract)
         {
             int toReturn = 0;

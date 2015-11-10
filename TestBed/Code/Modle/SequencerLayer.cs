@@ -74,6 +74,9 @@ namespace TestBed
             this.requestStop();
         }
 
+        /// <summary>
+        /// Creats, names, and starts all the threads the sequencer manages
+        /// </summary>
         private void startSequencerThreads()
         {
             log.Debug("Starting sequencer threads");
