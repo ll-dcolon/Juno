@@ -67,6 +67,14 @@ namespace TestBed
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger
             (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        //Loggers for specific pieces of data
+        private static readonly log4net.ILog tempLog = log4net.LogManager.GetLogger("Temperature");
+        private static readonly log4net.ILog flowLog = log4net.LogManager.GetLogger("Flow");
+        private static readonly log4net.ILog pressureLog = log4net.LogManager.GetLogger("Pressure");
+
+
+
+
         //The port used to communicate with the serial device
         private SerialPort _serialPort;
         //The configuration object used for the device
@@ -481,6 +489,7 @@ namespace TestBed
                     {
                         double resistance = getThermistorResistance(voltage);
                         double tempC = getTempInC(resistance);
+                        tempLog.Info(string.Format("{0}", tempC));
                         if (deviceDelegate != null)
                         {
                             log.Debug("Sending temp data to logical layer");
@@ -492,6 +501,7 @@ namespace TestBed
                         voltage = Math.Round(voltage, 2);
                         double pressure = (_slope * voltage) + _yIntercept;
                         log.Debug(string.Format("Received pressure reading : {0}", pressure));
+                        pressureLog.Info(string.Format("{0}", pressure));
                         if (deviceDelegate != null)
                         {
                             log.Debug("Sending new pressure data to delegate");
@@ -714,6 +724,7 @@ namespace TestBed
                 double rateMlPerSec = numberMl / secTimeInterval;
                 newFlowValue = rateMlPerSec;
             }
+            flowLog.Info(string.Format("{0}", newFlowValue));
             if (deviceDelegate != null)
             {
                 deviceDelegate.newFlowmeterData(inEvent, newFlowValue);

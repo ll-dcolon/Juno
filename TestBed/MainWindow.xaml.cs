@@ -83,10 +83,6 @@ namespace TestBed
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger
             (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        //Loggers for specific pieces of data
-        private static readonly log4net.ILog tempLog = log4net.LogManager.GetLogger("Temperature");
-        private static readonly log4net.ILog flowLog = log4net.LogManager.GetLogger("Flow");
-        private static readonly log4net.ILog pressureLog = log4net.LogManager.GetLogger("Pressure");
 
 
         //Used to let another object know when UI events happen        
@@ -280,7 +276,6 @@ namespace TestBed
 
             string bothStrings = string.Format("{0}f {1}c", fValue, inNewTemp);
 
-            tempLog.Info(string.Format("{0}", fValue));
             Dispatcher.Invoke((Action)delegate(){ voltageValue.Text = fValueString; });
         }
 
@@ -363,7 +358,6 @@ namespace TestBed
 
         public void updateFlowRate(double inNewFlowRate)
         {
-            flowLog.Info(string.Format("{0}", inNewFlowRate));
             Dispatcher.Invoke((Action)delegate () { flowRateValue.Text = string.Format("{0}", inNewFlowRate); });
         }
 
@@ -377,7 +371,6 @@ namespace TestBed
 
         public void updatePressureValue(double inNewPressureValue)
         {
-            pressureLog.Info(string.Format("{0}", inNewPressureValue));
             Dispatcher.Invoke((Action)delegate () { pressureValue.Text = string.Format("{0}", inNewPressureValue); });
         }
     }
