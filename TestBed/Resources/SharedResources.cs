@@ -22,18 +22,29 @@ namespace TestBed
         ToggleOutputRequest,
         UpdateOutputRequest,
         QueryCounterRequest,
-        StartTestSequencerRequest,
+        StartSequencerRequest,
         AnalogPinQueryRequest
 
     };
+
+
+    //IDs for the various sequencer types
+    public enum SequenceID
+    {
+        TestSequence,
+        twoOzSequence,
+        fourOzSequence,
+        eightOzSequence
+    }
 
 
     //The names that we will give various pins
     public enum DIOPins
     {
         Heater_AN1 = 0x01,
-        AirPump_AN0 = 0x00,
-        WaterPump_AN2 = 0x02
+        AirSolenoid_AN0 = 0x00,
+        WaterPump_AN2 = 0x02,
+        AirPump_AN3 = 0x03
     };
 
 
@@ -66,11 +77,13 @@ namespace TestBed
             switch (pinToSetOn)
             {
                 case DIOPins.Heater_AN1:
-                    return false;
-                case DIOPins.AirPump_AN0:
-                    return false;
+                    return true;
+                case DIOPins.AirSolenoid_AN0:
+                    return true;
                 case DIOPins.WaterPump_AN2:
-                    return false;
+                    return true;
+                case DIOPins.AirPump_AN3:
+                    return true;
                 default:
                     throw new Exception();
             }

@@ -195,14 +195,17 @@ namespace TestBed
             log.Info(String.Format("{0} selected when toggleOutput button clicked", targetOutput));
             switch (targetOutput)
             {
-                case "Heater (AN1) (Red)":
+                case "Heater (AN1)":
                     pinToToggle = DIOPins.Heater_AN1;
                     break;
-                case "Air Pump (AN0) (White)":
-                    pinToToggle = DIOPins.AirPump_AN0;
+                case "Air Solenoid (AN0)":
+                    pinToToggle = DIOPins.AirSolenoid_AN0;
                     break;
-                case "Water Pump (AN2) (Green)":
+                case "Water Pump (AN2)":
                     pinToToggle = DIOPins.WaterPump_AN2;
+                    break;
+                case "Air Pump (AN3)":
+                    pinToToggle = DIOPins.AirPump_AN3;
                     break;
                 default:
                     log.Error(String.Format("Did not recognize selected port to toggle : {0}", targetOutput));
@@ -223,34 +226,84 @@ namespace TestBed
         private void startTestSequencerButton_Click(object sender, RoutedEventArgs e)
         {
             log.Info("Clicked the startTestSequence button");
-            StartTestSequencerEvent clickTarget = new StartTestSequencerEvent();
+            handleSequencerClicked(SequenceID.TestSequence);
+        }
+
+        /// <summary>
+        /// Starts the 2 oz recipe sequence
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void twoOzSequence_Click(object sender, RoutedEventArgs e)
+        {
+            log.Info("Clicked the startTestSequence button");
+            handleSequencerClicked(SequenceID.twoOzSequence);
+        }
+
+        /// <summary>
+        /// Starts the 4 oz recipe sequence
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void fourOzSequence_Click(object sender, RoutedEventArgs e)
+        {
+            log.Info("Clicked the startTestSequence button");
+            handleSequencerClicked(SequenceID.fourOzSequence);
+        }
+
+        /// <summary>
+        /// Starts the 8 oz recipe sequence
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void eightOzSequence_Click(object sender, RoutedEventArgs e)
+        {
+            log.Info("Clicked the startTestSequence button");
+            handleSequencerClicked(SequenceID.eightOzSequence);
+        }
+
+
+        private void handleSequencerClicked(SequenceID inSequencerID)
+        {
+            StartSequencerEvent newEvent = new StartSequencerEvent(inSequencerID);
             if (_uiDelegate != null)
             {
                 log.Debug("Adding the startTestSequence event to the processing queue");
-                _uiDelegate.enqueueEvent(clickTarget);
+                _uiDelegate.enqueueEvent(newEvent);
             }
         }
 
 
+
+
+
+
         private void heaterIOBox_Clicked(object sender, RoutedEventArgs e)
         {
-            bool shouldSetHigh = !(bool)heaterIOBox.IsChecked;
+            bool shouldSetHigh = (bool)heaterIOBox.IsChecked;
             log.Info(string.Format("Clicked heater checkbox.  Checkbox.IsChecked = {0}", shouldSetHigh));
             changeOutput(DIOPins.Heater_AN1, shouldSetHigh);
         }
 
         private void airIOBox_Clicked(object sender, RoutedEventArgs e)
         {
-            bool shouldSetHigh = !(bool)airIOBox.IsChecked;
+            bool shouldSetHigh = (bool)airIOBox.IsChecked;
             log.Info(string.Format("Clicked air checkbox.  Checkbox.IsChecked = {0}", shouldSetHigh));
-            changeOutput(DIOPins.AirPump_AN0, shouldSetHigh);
+            changeOutput(DIOPins.AirSolenoid_AN0, shouldSetHigh);
         }
 
         private void waterIOBox_Clicked(object sender, RoutedEventArgs e)
         {
-            bool shouldSetHigh = !(bool)waterIOBox.IsChecked;
+            bool shouldSetHigh = (bool)waterIOBox.IsChecked;
             log.Info(string.Format("Clicked water checkbox.  Checkbox.IsChecked = {0}", shouldSetHigh));
             changeOutput(DIOPins.WaterPump_AN2, shouldSetHigh);
+        }
+
+        private void airPumpIOBox_Clicked(object sender, RoutedEventArgs e)
+        {
+            bool shouldSetHigh = (bool)airPumpIOBox.IsChecked;
+            log.Info(string.Format("Clicked air pump checkbox.  Checkbox.IsChecked = {0}", shouldSetHigh));
+            changeOutput(DIOPins.AirPump_AN3, shouldSetHigh);
         }
 
         private void changeOutput(DIOPins pinToChange, bool shouldSetHigh)
@@ -304,7 +357,6 @@ namespace TestBed
 
         private void updateUIEnabled(bool isEnabled)
         {
-            Console.WriteLine("Updating {0}", isEnabled);
             flashLEDButton.IsEnabled = isEnabled;
             toggleLEDButton.IsEnabled = isEnabled;
             turnOffLEDButton.IsEnabled = isEnabled;
@@ -315,6 +367,10 @@ namespace TestBed
             startTestSequencerButton.IsEnabled = isEnabled;
             toggleOutput.IsEnabled = isEnabled;
             connectButton.IsEnabled = isEnabled;
+            airPumpIOBox.IsEnabled = isEnabled;
+            twoOzSequence.IsEnabled = isEnabled;
+            fourOzSequence.IsEnabled = isEnabled;
+            eightOzSequence.IsEnabled = isEnabled;
         }
 
 
@@ -323,16 +379,20 @@ namespace TestBed
             switch (inEvent._pinToUpdate)
             {
                 case DIOPins.Heater_AN1:
-                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { heaterIOBox.IsChecked = false; }); }
-                    else { Dispatcher.Invoke((Action)delegate () { heaterIOBox.IsChecked = true; }); }
+                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { heaterIOBox.IsChecked = true; }); }
+                    else { Dispatcher.Invoke((Action)delegate () { heaterIOBox.IsChecked = false; }); }
                     break;
-                case DIOPins.AirPump_AN0:
-                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { airIOBox.IsChecked = false; }); }
-                    else { Dispatcher.Invoke((Action)delegate () { airIOBox.IsChecked = true; }); }
+                case DIOPins.AirSolenoid_AN0:
+                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { airIOBox.IsChecked = true; }); }
+                    else { Dispatcher.Invoke((Action)delegate () { airIOBox.IsChecked = false; }); }
                     break;
                 case DIOPins.WaterPump_AN2:
-                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { waterIOBox.IsChecked = false; }); }
-                    else { Dispatcher.Invoke((Action)delegate () { waterIOBox.IsChecked = true; }); }
+                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { waterIOBox.IsChecked = true; }); }
+                    else { Dispatcher.Invoke((Action)delegate () { waterIOBox.IsChecked = false; }); }
+                    break;
+                case DIOPins.AirPump_AN3:
+                    if (inEvent._shouldBeHigh) { Dispatcher.Invoke((Action)delegate () { airPumpIOBox.IsChecked = true; }); }
+                    else { Dispatcher.Invoke((Action)delegate () { airPumpIOBox.IsChecked = false; }); }
                     break;
                 default:
                     break;
@@ -373,5 +433,7 @@ namespace TestBed
         {
             Dispatcher.Invoke((Action)delegate () { pressureValue.Text = string.Format("{0}", inNewPressureValue); });
         }
+
+
     }
 }

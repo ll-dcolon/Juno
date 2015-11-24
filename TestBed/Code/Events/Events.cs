@@ -196,11 +196,14 @@ namespace TestBed
     /// <summary>
     /// Represents an event that tell the test sequencer to start running
     /// </summary>
-    public class StartTestSequencerEvent : Event
+    public class StartSequencerEvent : Event
     {
-        public StartTestSequencerEvent()
+        public SequenceID _sequenceID;
+
+        public StartSequencerEvent(SequenceID inSequenceID)
         {
-            identifier = EventIdentifier.StartTestSequencerRequest;
+            _sequenceID = inSequenceID;
+            identifier = EventIdentifier.StartSequencerRequest;
         }
     }
 }

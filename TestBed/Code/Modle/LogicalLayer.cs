@@ -64,9 +64,10 @@ namespace TestBed
             //Make sure if you change something here, change it in the physical 
             //device too
             log.Debug("Setting starting states of the outputs");
-            _pinStates.TryAdd(DIOPins.AirPump_AN0, true);
-            _pinStates.TryAdd(DIOPins.WaterPump_AN2, true);
-            _pinStates.TryAdd(DIOPins.Heater_AN1, true);
+            _pinStates.TryAdd(DIOPins.AirSolenoid_AN0, !(HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0)));
+            _pinStates.TryAdd(DIOPins.WaterPump_AN2, !(HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2)));
+            _pinStates.TryAdd(DIOPins.Heater_AN1, !(HelperMethods.getDeviceOnState(DIOPins.Heater_AN1)));
+            _pinStates.TryAdd(DIOPins.AirPump_AN3, !(HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3)));
         }
 
 

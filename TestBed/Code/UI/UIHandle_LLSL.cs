@@ -43,6 +43,9 @@ namespace TestBed
 
         //Notifies the sequencer that it should start the test sequence
         private AutoResetEvent _startTestSequenceEvent;
+        private AutoResetEvent _startTwoOzSequenceEvent;
+        private AutoResetEvent _startFourOzSequenceEvent;
+        private AutoResetEvent _startEightOzSequenceEvent;
 
         //Logical layer used to send messages to the device
         private LogicalLayer _logicalLayer;
@@ -65,6 +68,9 @@ namespace TestBed
 
             _enqueueEvent = new AutoResetEvent(false);
             _startTestSequenceEvent = new AutoResetEvent(false);
+            _startTwoOzSequenceEvent = new AutoResetEvent(false);
+            _startFourOzSequenceEvent = new AutoResetEvent(false);
+            _startEightOzSequenceEvent = new AutoResetEvent(false);
 
             _logicalLayer = inLogicalLayer;
         }
@@ -156,9 +162,10 @@ namespace TestBed
                         log.Debug(string.Format("Handling toggleOutput (toggle pin: {0}) ui event", toggleOutputEvent._pinToToggle));
                         handleToggleOutputEvent(pinToToggle);
                         break;
-                    case EventIdentifier.StartTestSequencerRequest:
+                    case EventIdentifier.StartSequencerRequest:
                         log.Debug("Handling startTestSequence ui event");
-                        handleStartTestSequencerEvent();
+                        StartSequencerEvent sequencerEvent = (StartSequencerEvent)newEvent;
+                        handleStartSequencerEvent(sequencerEvent);
                         break;
                     case EventIdentifier.UpdateOutputRequest:
                         log.Debug("Handling updateOutput UI Event");
@@ -180,10 +187,30 @@ namespace TestBed
         private void handleFlashLEDEvent() { _logicalLayer.flashLED_LL(); }
         private void handleChangeLEDStateEvent(bool isHigh) { _logicalLayer.changeLEDState(isHigh); }
         private void handleToggleOutputEvent(DIOPins pinToToggle) { _logicalLayer.toggleOutput(pinToToggle); }
-        private void handleStartTestSequencerEvent() { _startTestSequenceEvent.Set(); }
         private void handleUpdateOutputEvent(DIOPins pinToChange, bool shouldSetHigh) { _logicalLayer.controlOutput(pinToChange, shouldSetHigh); }
 
 
+        private void handleStartSequencerEvent(StartSequencerEvent inEvent)
+        {
+            switch (inEvent._sequenceID)
+            {
+                case SequenceID.TestSequence:
+                    _startTestSequenceEvent.Set();
+                    break;
+                case SequenceID.twoOzSequence:
+                    _startTwoOzSequenceEvent.Set();
+                    break;
+                case SequenceID.fourOzSequence:
+                    _startFourOzSequenceEvent.Set();
+                    break;
+                case SequenceID.eightOzSequence:
+                    _startEightOzSequenceEvent.Set();
+                    break;
+                default:
+                    log.Error(string.Format("{1} is not a valid sequencer id", inEvent._sequenceID));
+                    break;
+            }
+        }
 
 
 
@@ -202,10 +229,37 @@ namespace TestBed
             log.Debug("Waiting for start test to be clicked");
             if (inMSToWait == 0){_startTestSequenceEvent.WaitOne(); return true; }
             else{
-                log.Debug("Start test was not clicked");
                 return _startTestSequenceEvent.WaitOne(inMSToWait);
             }
         }
 
+
+        public bool waitForStartTwoOzSequencerRequest(int inMSToWait = 0)
+        {
+            log.Debug("Waiting for start two oz to be clicked");
+            if (inMSToWait == 0) { _startTwoOzSequenceEvent.WaitOne(); return true; }
+            else
+            {
+                return _startTwoOzSequenceEvent.WaitOne(inMSToWait);
+            }
+        }
+        public bool waitForStartFourOzSequencerRequest(int inMSToWait = 0)
+        {
+            log.Debug("Waiting for start four oz to be clicked");
+            if (inMSToWait == 0) { _startFourOzSequenceEvent.WaitOne(); return true; }
+            else
+            {
+                return _startFourOzSequenceEvent.WaitOne(inMSToWait);
+            }
+        }
+        public bool waitForStartEightOzSequencerRequest(int inMSToWait = 0)
+        {
+            log.Debug("Waiting for start eight oz to be clicked");
+            if (inMSToWait == 0) { _startEightOzSequenceEvent.WaitOne(); return true; }
+            else
+            {
+                return _startEightOzSequenceEvent.WaitOne(inMSToWait);
+            }
+        }
     }
 }

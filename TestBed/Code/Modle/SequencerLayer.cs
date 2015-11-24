@@ -24,13 +24,17 @@ namespace TestBed
 
 
         //The max allowable temp for the heater to register in C
-        private const int MAX_HEATER_TEMP = 25;
+        private const int MAX_HEATER_TEMP = 40;
 
         //Flag to stop the processing thread;
         private volatile bool _shouldStop;
 
         //Thread used for the basic sequencer testing
         private Thread _testSequencerThread;
+        private Thread _twoOzSequencerThread;
+        private Thread _fourOzSequencerThread;
+        private Thread _eightOzSequencerThread;
+
         //Thread to monitor the temerpature of the heater and shuts
         //off power if the heater is too hot
         private Thread _heaterMonitoringThread;
@@ -87,6 +91,18 @@ namespace TestBed
             _heaterMonitoringThread = new Thread(this.heaterMonitorThread);
             _heaterMonitoringThread.Name = "heaterMonitoringThread";
             _heaterMonitoringThread.Start();
+
+            _twoOzSequencerThread = new Thread(this.twoOzSequencer);
+            _twoOzSequencerThread.Name = "twoOzSequencerThread";
+            _twoOzSequencerThread.Start();
+
+            _fourOzSequencerThread = new Thread(this.fourOzSequencer);
+            _fourOzSequencerThread.Name = "fourOzSequencerThread";
+            _fourOzSequencerThread.Start();
+
+            _eightOzSequencerThread = new Thread(this.eightOzSequencer);
+            _eightOzSequencerThread.Name = "eightOzSequencerThread";
+            _eightOzSequencerThread.Start();
         }
 
         /// <summary>
@@ -147,7 +163,7 @@ namespace TestBed
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Turning off all the outputs");
                 _logicalLayer.controlOutput(DIOPins.Heater_AN1, !HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
-                _logicalLayer.controlOutput(DIOPins.AirPump_AN0, !HelperMethods.getDeviceOnState(DIOPins.AirPump_AN0));
+                _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, !HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
                 _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, !HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Flashing the main LED");
@@ -169,20 +185,20 @@ namespace TestBed
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_AN2);
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RB6");
-                _logicalLayer.toggleOutput(DIOPins.AirPump_AN0);
+                _logicalLayer.toggleOutput(DIOPins.AirSolenoid_AN0);
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RB6 again");
-                _logicalLayer.toggleOutput(DIOPins.AirPump_AN0);
+                _logicalLayer.toggleOutput(DIOPins.AirSolenoid_AN0);
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RB6 and RA4");
-                _logicalLayer.toggleOutput(DIOPins.AirPump_AN0);
+                _logicalLayer.toggleOutput(DIOPins.AirSolenoid_AN0);
                 _logicalLayer.toggleOutput(DIOPins.Heater_AN1);
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RB7");
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_AN2);
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RB6");
-                _logicalLayer.toggleOutput(DIOPins.AirPump_AN0);
+                _logicalLayer.toggleOutput(DIOPins.AirSolenoid_AN0);
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RB7");
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_AN2);
@@ -197,22 +213,22 @@ namespace TestBed
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_AN2);
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RB6");
-                _logicalLayer.toggleOutput(DIOPins.AirPump_AN0);
+                _logicalLayer.toggleOutput(DIOPins.AirSolenoid_AN0);
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RA4, RB6, RB7");
                 _logicalLayer.toggleOutput(DIOPins.Heater_AN1);
-                _logicalLayer.toggleOutput(DIOPins.AirPump_AN0);
+                _logicalLayer.toggleOutput(DIOPins.AirSolenoid_AN0);
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_AN2);
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RA4, RB6, RB7, and LED");
                 _logicalLayer.toggleOutput(DIOPins.Heater_AN1);
-                _logicalLayer.toggleOutput(DIOPins.AirPump_AN0);
+                _logicalLayer.toggleOutput(DIOPins.AirSolenoid_AN0);
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_AN2);
                 _logicalLayer.toggleLED_LL();
                 Thread.Sleep(msToDelay);
                 log.Debug("TS - Toggle RA4, RB6, RB7, and LED again");
                 _logicalLayer.toggleOutput(DIOPins.Heater_AN1);
-                _logicalLayer.toggleOutput(DIOPins.AirPump_AN0);
+                _logicalLayer.toggleOutput(DIOPins.AirSolenoid_AN0);
                 _logicalLayer.toggleOutput(DIOPins.WaterPump_AN2);
                 _logicalLayer.toggleLED_LL();
                 log.Info("Test sequencer finished successfully");
@@ -223,6 +239,121 @@ namespace TestBed
                 }
             }
         }
+
+
+        private void twoOzSequencer()
+        {
+            while (!_shouldStop)
+            {
+                _uiHandler.waitForStartTwoOzSequencerRequest();
+                if (_uiDelegate != null)
+                {
+                    _uiDelegate.updateSequencerState(true);
+                    _uiDelegate.appendNote(string.Format("Starting 2oz Recipe\n"));
+                }
+
+
+                _logicalLayer.controlOutput(DIOPins.Heater_AN1, HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
+                Thread.Sleep(10000);
+                _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
+                Thread.Sleep(5000);
+                _logicalLayer.controlOutput(DIOPins.Heater_AN1, !HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
+                _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, !HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
+                Thread.Sleep(5000);
+                _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
+                Thread.Sleep(100);
+                _logicalLayer.controlOutput(DIOPins.AirPump_AN3, HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
+                Thread.Sleep(5500);
+                _logicalLayer.controlOutput(DIOPins.AirPump_AN3, !HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
+                _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, !HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
+
+
+                if (_uiDelegate != null)
+                {
+                    _uiDelegate.updateSequencerState(false);
+                    _uiDelegate.appendNote(string.Format("Finished 2oz Recipe\n"));
+                }
+            }
+        }
+
+
+
+
+
+        private void fourOzSequencer()
+        {
+            while (!_shouldStop)
+            {
+                _uiHandler.waitForStartFourOzSequencerRequest();
+                if (_uiDelegate != null)
+                {
+                    _uiDelegate.updateSequencerState(true);
+                    _uiDelegate.appendNote(string.Format("Starting 4oz Recipe\n"));
+                }
+
+
+
+                _logicalLayer.controlOutput(DIOPins.Heater_AN1, HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
+                Thread.Sleep(10000);
+                _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
+                Thread.Sleep(10000);
+                _logicalLayer.controlOutput(DIOPins.Heater_AN1, !HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
+                _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, !HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
+                Thread.Sleep(5000);
+                _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
+                Thread.Sleep(100);
+                _logicalLayer.controlOutput(DIOPins.AirPump_AN3, HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
+                Thread.Sleep(5500);
+                _logicalLayer.controlOutput(DIOPins.AirPump_AN3, !HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
+                _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, !HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
+
+
+                if (_uiDelegate != null)
+                {
+                    _uiDelegate.updateSequencerState(false);
+                    _uiDelegate.appendNote(string.Format("Finished 4oz Recipe\n"));
+                }
+            }
+        }
+
+        private void eightOzSequencer()
+        {
+            while (!_shouldStop)
+            {
+                _uiHandler.waitForStartEightOzSequencerRequest();
+                if (_uiDelegate != null)
+                {
+                    _uiDelegate.updateSequencerState(true);
+                    _uiDelegate.appendNote(string.Format("Starting 8oz Recipe\n"));
+                }
+
+
+
+                _logicalLayer.controlOutput(DIOPins.Heater_AN1, HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
+                Thread.Sleep(10000);
+                _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
+                Thread.Sleep(19000);
+                _logicalLayer.controlOutput(DIOPins.Heater_AN1, !HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
+                _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, !HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
+                Thread.Sleep(5000);
+                _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
+                Thread.Sleep(100);
+                _logicalLayer.controlOutput(DIOPins.AirPump_AN3, HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
+                Thread.Sleep(5500);
+                _logicalLayer.controlOutput(DIOPins.AirPump_AN3, !HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
+                _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, !HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
+
+
+                if (_uiDelegate != null)
+                {
+                    _uiDelegate.updateSequencerState(false);
+                    _uiDelegate.appendNote(string.Format("Finished 8oz Recipe\n"));
+                }
+            }
+        }
+
+
+
 
 
 
@@ -239,6 +370,9 @@ namespace TestBed
                 {
                     //Turn on the heater if its too hot
                     bool currentHeaterPinState = _logicalLayer.getPinState(DIOPins.Heater_AN1);
+
+                    ///!@#CHANGE WHEN NOT ON THE TESTBED ANY MORE
+                    currentHeaterPinState = false;
 
                     if (currentHeaterPinState == HelperMethods.getDeviceOnState(DIOPins.Heater_AN1))
                     {

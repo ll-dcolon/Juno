@@ -117,7 +117,7 @@ namespace TestBed
         //The number of ms to wait for a responce
         private const int MS_TO_WAIT_FOR_RESPONCE = 3000;
         //The number of ml represented by a pulse of the flow meter
-//        private const double ML_OF_WATER_PER_PULSE = 0.8394;
+//        private const double ML_OF_WATER_PER_PULSE = 0.5194; //For 1.2mm nozzle
         private const double ML_OF_WATER_PER_PULSE = 0.4197;
 
 
@@ -170,7 +170,25 @@ namespace TestBed
             if (_hasStarted)
             {
                 stopThreads();
+                turnOffOutputs();
             }
+        }
+
+        /// <summary>
+        /// Turns off all the outputs so the device is in a known state
+        /// </summary>
+        public void turnOffOutputs()
+        {
+            log.Debug("Setting the state of all the outputs to off");
+            //AN0
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.AirSolenoid_AN0, 0x00, Convert.ToInt32(!(HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0))) }));
+            //AN2
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.WaterPump_AN2, 0x00, Convert.ToInt32(!(HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2))) }));
+            //AN1
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.Heater_AN1, 0x00, Convert.ToInt32(!(HelperMethods.getDeviceOnState(DIOPins.Heater_AN1))) }));
+            //AN3
+            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.AirPump_AN3, 0x00, Convert.ToInt32(!(HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3))) }));
+
         }
 
 
@@ -222,13 +240,7 @@ namespace TestBed
             //Set the state of all the digital outputs to be low
             //These states must match the initial state of the pin dictionary in the logical layer
             //If you change something here, make sure you change it there too
-            log.Debug("Setting the state of all the outputs");
-            //AN0
-            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.AirPump_AN0, 0x00, 0x01 }));
-            //AN2
-            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.WaterPump_AN2, 0x00, 0x01 }));
-            //AN1
-            _serialPort.Write(buildMessage(new List<int> { 0x05, 0x35, (int)DIOPins.Heater_AN1, 0x00, 0x01 }));
+            turnOffOutputs();
 
             //Set up event counter on RB6
             _serialPort.Write(buildMessage(new List<int> { 0x04, 0x36, 0x06, 0x00 }));
@@ -397,6 +409,7 @@ namespace TestBed
             else
             {
                 log.Error(string.Format("Did not receive a responce in {0}ms", msToWait));
+                return false;
                 throw new Exception();
             }
         }

@@ -22,6 +22,9 @@ namespace TestBed
         private string configFile = @"C:\vault\TestBed\Config\testBedConfig.json";
 
 
+        private PhysicalLayer _physicalLayer;
+
+
         private void Application_Startup(object sender, StartupEventArgs e)
         {
             log.Info("Application Starting");
@@ -34,9 +37,9 @@ namespace TestBed
 
             //Set up all the objects and delegates necesary to run the program
             log.Debug("Setup objects");
-            PhysicalLayer physicalLayer = new PhysicalLayer(systemConfig.getDeviceConfig());
-            LogicalLayer logicalLayer = new LogicalLayer(physicalLayer);
-            physicalLayer.setDelegate(logicalLayer);
+            _physicalLayer = new PhysicalLayer(systemConfig.getDeviceConfig());
+            LogicalLayer logicalLayer = new LogicalLayer(_physicalLayer);
+            _physicalLayer.setDelegate(logicalLayer);
             UIHandle_LLSL uiHandle = new UIHandle_LLSL(logicalLayer);
             SequencerLayer sequencer = new SequencerLayer(uiHandle, logicalLayer);
 
@@ -48,5 +51,12 @@ namespace TestBed
             wnd.setDelegate(uiHandle);
             wnd.Show();
         }
+
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            _physicalLayer.turnOffOutputs();
+        }
     }
+
 }
