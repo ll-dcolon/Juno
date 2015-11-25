@@ -195,7 +195,7 @@ namespace TestBed
         /// <summary>
         /// Stops all the sensor monitoring threads
         /// </summary>
-        private void stopThreads()
+        public void stopThreads()
         {
             _shouldStop = true;
             _thermistorVoltageThread.Join();
