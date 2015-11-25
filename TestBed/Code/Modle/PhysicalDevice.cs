@@ -117,8 +117,8 @@ namespace TestBed
         //The number of ms to wait for a responce
         private const int MS_TO_WAIT_FOR_RESPONCE = 3000;
         //The number of ml represented by a pulse of the flow meter
-//        private const double ML_OF_WATER_PER_PULSE = 0.5194; //For 1.2mm nozzle
-        private const double ML_OF_WATER_PER_PULSE = 0.4197;
+        private const double ML_OF_WATER_PER_PULSE = 0.5194; //For 1.2mm nozzle
+        //private const double ML_OF_WATER_PER_PULSE = 0.4197;
 
 
         //Theta 0 and Theta 1 for mressure sensor line
@@ -198,9 +198,9 @@ namespace TestBed
         public void stopThreads()
         {
             _shouldStop = true;
-            _thermistorVoltageThread.Join();
-            _flowmeterCounterThread.Join();
-            _pressureSensorThread.Join();
+            if(_thermistorVoltageThread != null) _thermistorVoltageThread.Join();
+            if(_flowmeterCounterThread != null) _flowmeterCounterThread.Join();
+            if(_pressureSensorThread != null) _pressureSensorThread.Join();
         }
 
 

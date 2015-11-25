@@ -1,0 +1,12 @@
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\bin\Release\TestBedTests.dll
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\bin\Release\TestBedTests.pdb
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\bin\Release\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\bin\Release\TestBed.exe
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\bin\Release\log4net.dll
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\bin\Release\Newtonsoft.Json.dll
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\bin\Release\TestBed.pdb
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\bin\Release\log4net.xml
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\bin\Release\Newtonsoft.Json.xml
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\obj\Release\TestBedTests.csprojResolveAssemblyReference.cache
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\obj\Release\TestBedTests.dll
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBedTests\obj\Release\TestBedTests.pdb
