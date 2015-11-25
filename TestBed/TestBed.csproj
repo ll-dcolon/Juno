@@ -75,6 +75,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Code\Configuration\DeviceConfig.cs" />
+    <Compile Include="Code\Configuration\SequencerConfig.cs" />
     <Compile Include="Code\Configuration\SystemConfig.cs" />
     <Compile Include="Code\Modle\LogicalLayer.cs" />
     <Compile Include="Code\Modle\PhysicalDevice.cs" />

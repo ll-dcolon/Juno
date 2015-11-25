@@ -1,1 +1,0 @@
-2015-10-27 17:47:21,157 [9] INFO TestBed.App - This is the first log
