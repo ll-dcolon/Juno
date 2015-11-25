@@ -23,6 +23,8 @@ namespace TestBed
 
 
         private PhysicalLayer _physicalLayer;
+        private SequencerLayer _sequencerLayer;
+        private UIHandle_LLSL _uiHandle;
 
 
         private void Application_Startup(object sender, StartupEventArgs e)
@@ -40,15 +42,15 @@ namespace TestBed
             _physicalLayer = new PhysicalLayer(systemConfig.getDeviceConfig());
             LogicalLayer logicalLayer = new LogicalLayer(_physicalLayer);
             _physicalLayer.setDelegate(logicalLayer);
-            UIHandle_LLSL uiHandle = new UIHandle_LLSL(logicalLayer);
-            SequencerLayer sequencer = new SequencerLayer(uiHandle, logicalLayer);
+            _uiHandle = new UIHandle_LLSL(logicalLayer);
+            _sequencerLayer = new SequencerLayer(_uiHandle, logicalLayer, systemConfig.getSequencerConfig());
 
             //Setup main window
             log.Debug("Setup main window");
             MainWindow wnd = new MainWindow();
             logicalLayer.setUIDelegate(wnd);
-            sequencer.setUIDelegate(wnd);
-            wnd.setDelegate(uiHandle);
+            _sequencerLayer.setUIDelegate(wnd);
+            wnd.setDelegate(_uiHandle);
             wnd.Show();
         }
 
@@ -56,6 +58,10 @@ namespace TestBed
         protected override void OnExit(ExitEventArgs e)
         {
             _physicalLayer.turnOffOutputs();
+            _sequencerLayer.requestStop();
+            _physicalLayer.stopThreads();
+            _uiHandle.requestStop();
+            Application.Current.Shutdown();
         }
     }
 

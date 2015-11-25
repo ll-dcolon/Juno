@@ -35,7 +35,7 @@ namespace TestBed
         twoOzSequence,
         fourOzSequence,
         eightOzSequence
-    }
+    };
 
 
     //The names that we will give various pins

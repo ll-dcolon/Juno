@@ -19,6 +19,10 @@ namespace TestBed
         private LogicalLayer _logicalLayer;
 
 
+
+        private SequencerConfig _sequencerConfig;
+
+
         //Used if the sequencer wants to update the UI
         private UpdateUIInterface _uiDelegate;
 
@@ -48,12 +52,13 @@ namespace TestBed
         /// </summary>
         /// <param name="inUIHandler">Reference to the UIHandler</param>
         /// <param name="inLogicalLayer">Reference to the logical layer</param>
-        public SequencerLayer(UIHandle_LLSL inUIHandler, LogicalLayer inLogicalLayer)
+        public SequencerLayer(UIHandle_LLSL inUIHandler, LogicalLayer inLogicalLayer, SequencerConfig inSequencerConfig)
         {
             log.Debug(string.Format("Creating sequencer:{0} with logicalLayer:{1} and UIHandler:{2}", this, inLogicalLayer, inUIHandler));
             _uiHandler = inUIHandler;
             _logicalLayer = inLogicalLayer;
             _shouldStop = false;
+            _sequencerConfig = inSequencerConfig;
             startSequencerThreads();
         }
 
@@ -114,6 +119,9 @@ namespace TestBed
             _shouldStop = true;
             _testSequencerThread.Join();
             _heaterMonitoringThread.Join();
+            _twoOzSequencerThread.Join();
+            _fourOzSequencerThread.Join();
+            _eightOzSequencerThread.Join();
         }
 
 
@@ -151,7 +159,7 @@ namespace TestBed
             int msToDelay = 350;
             while (!_shouldStop)
             {
-                _uiHandler.waitForStartTestSequenceRequest();
+                if (!_uiHandler.waitForStartTestSequenceRequest(100)) continue;
                 if (_uiDelegate != null)
                 {
                     _uiDelegate.updateSequencerState(true);
@@ -245,7 +253,7 @@ namespace TestBed
         {
             while (!_shouldStop)
             {
-                _uiHandler.waitForStartTwoOzSequencerRequest();
+                if (!_uiHandler.waitForStartTwoOzSequencerRequest(100)) continue;
                 if (_uiDelegate != null)
                 {
                     _uiDelegate.updateSequencerState(true);
@@ -254,16 +262,16 @@ namespace TestBed
 
 
                 _logicalLayer.controlOutput(DIOPins.Heater_AN1, HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
-                Thread.Sleep(10000);
+                Thread.Sleep(_sequencerConfig._twoOzTBHeaterOnWaterOn);
                 _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
-                Thread.Sleep(5000);
+                Thread.Sleep(_sequencerConfig._twoOzTBWaterOnWaterAndHeaterOff);
                 _logicalLayer.controlOutput(DIOPins.Heater_AN1, !HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
                 _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, !HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
-                Thread.Sleep(5000);
+                Thread.Sleep(_sequencerConfig._twoOzTBWaterAndHeaterOffAirOn);
                 _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
                 Thread.Sleep(100);
                 _logicalLayer.controlOutput(DIOPins.AirPump_AN3, HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
-                Thread.Sleep(5500);
+                Thread.Sleep( _sequencerConfig._twoOzTBAirOnAirOff);
                 _logicalLayer.controlOutput(DIOPins.AirPump_AN3, !HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
                 _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, !HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
 
@@ -284,7 +292,7 @@ namespace TestBed
         {
             while (!_shouldStop)
             {
-                _uiHandler.waitForStartFourOzSequencerRequest();
+                if (!_uiHandler.waitForStartFourOzSequencerRequest(100)) continue;
                 if (_uiDelegate != null)
                 {
                     _uiDelegate.updateSequencerState(true);
@@ -294,16 +302,16 @@ namespace TestBed
 
 
                 _logicalLayer.controlOutput(DIOPins.Heater_AN1, HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
-                Thread.Sleep(10000);
+                Thread.Sleep(_sequencerConfig._fourOzTBHeaterOnWaterOn); ;
                 _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
-                Thread.Sleep(10000);
+                Thread.Sleep(_sequencerConfig._fourOzTBWaterOnWaterAndHeaterOff); ;
                 _logicalLayer.controlOutput(DIOPins.Heater_AN1, !HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
                 _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, !HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
-                Thread.Sleep(5000);
+                Thread.Sleep(_sequencerConfig._fourOzTBWaterAndHeaterOffAirOn); ;
                 _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
                 Thread.Sleep(100);
                 _logicalLayer.controlOutput(DIOPins.AirPump_AN3, HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
-                Thread.Sleep(5500);
+                Thread.Sleep(_sequencerConfig._fourOzTBAirOnAirOff); ;
                 _logicalLayer.controlOutput(DIOPins.AirPump_AN3, !HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
                 _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, !HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
 
@@ -320,6 +328,7 @@ namespace TestBed
         {
             while (!_shouldStop)
             {
+                if (!_uiHandler.waitForStartEightOzSequencerRequest(100)) continue;
                 _uiHandler.waitForStartEightOzSequencerRequest();
                 if (_uiDelegate != null)
                 {
@@ -330,16 +339,16 @@ namespace TestBed
 
 
                 _logicalLayer.controlOutput(DIOPins.Heater_AN1, HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
-                Thread.Sleep(10000);
+                Thread.Sleep(_sequencerConfig._eightOzTBHeaterOnWaterOn);
                 _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
-                Thread.Sleep(19000);
+                Thread.Sleep(_sequencerConfig._eightOzTBWaterOnWaterAndHeaterOff);
                 _logicalLayer.controlOutput(DIOPins.Heater_AN1, !HelperMethods.getDeviceOnState(DIOPins.Heater_AN1));
                 _logicalLayer.controlOutput(DIOPins.WaterPump_AN2, !HelperMethods.getDeviceOnState(DIOPins.WaterPump_AN2));
-                Thread.Sleep(5000);
+                Thread.Sleep(_sequencerConfig._eightOzTBWaterAndHeaterOffAirOn);
                 _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
                 Thread.Sleep(100);
                 _logicalLayer.controlOutput(DIOPins.AirPump_AN3, HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
-                Thread.Sleep(5500);
+                Thread.Sleep(_sequencerConfig._eightOzTBAirOnAirOff);
                 _logicalLayer.controlOutput(DIOPins.AirPump_AN3, !HelperMethods.getDeviceOnState(DIOPins.AirPump_AN3));
                 _logicalLayer.controlOutput(DIOPins.AirSolenoid_AN0, !HelperMethods.getDeviceOnState(DIOPins.AirSolenoid_AN0));
 
@@ -364,7 +373,7 @@ namespace TestBed
         {
             while (!_shouldStop)
             {
-                _logicalLayer.waitForNewTempReading();
+                if (!_logicalLayer.waitForNewTempReading(100)) continue;
                 double currentTemp = _logicalLayer.getCurrentWaterTemp();
                 if (currentTemp >= MAX_HEATER_TEMP)
                 {

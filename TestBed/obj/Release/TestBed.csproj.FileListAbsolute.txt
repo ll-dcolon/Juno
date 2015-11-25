@@ -3,10 +3,8 @@ C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Rele
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Release\TestBed.pdb
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Release\log4net.dll
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Release\Newtonsoft.Json.dll
-C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Release\System.Runtime.WindowsRuntime.dll
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Release\log4net.xml
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Release\Newtonsoft.Json.xml
-C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Release\System.Runtime.WindowsRuntime.xml
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Release\MainWindow.g.cs
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Release\App.g.cs
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Release\TestBed_MarkupCompile.cache
@@ -17,3 +15,8 @@ C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Rele
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Release\TestBed.csproj.GenerateResource.Cache
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Release\TestBed.exe
 C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Release\TestBed.pdb
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Release\TestBed.csprojResolveAssemblyReference.cache
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Release\TestBed.exe.manifest
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Release\TestBed.exe.manifest
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\bin\Release\TestBed.application
+C:\Users\dcolon\Documents\Visual Studio 2015\Projects\Work\Juno\TestBed\obj\Release\TestBed.application
