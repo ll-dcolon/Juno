@@ -1,0 +1,5 @@
+TestBed/obj/*
+TestBed/bin/*
+.vs/*
+TestBedTests/*
+packages/*
