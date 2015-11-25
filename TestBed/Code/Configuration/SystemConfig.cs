@@ -15,6 +15,8 @@ namespace TestBed
 
         //Internal config objects
         private DeviceConfig _deviceConfig;
+        private SequencerConfig _sequencerConfig;
+
 
         /// <summary>
         /// Creates a new SystemConfig object to hold all the configuration
@@ -32,6 +34,10 @@ namespace TestBed
                 string deviceConfigJSON = j[JSONKeys.DEVICE_KEY].ToString();
                 log.Debug(String.Format("Retrieved device json string : {0}", deviceConfigJSON));
                 _deviceConfig = new DeviceConfig(deviceConfigJSON);
+
+                string sequencerConfigJSON = j[JSONKeys.SEQUENCER_SEQUENCERS].ToString();
+                log.Debug(string.Format("Retrieved sequencer json string {0}", sequencerConfigJSON));
+                _sequencerConfig = new SequencerConfig(sequencerConfigJSON);
             }
             else
             {
@@ -48,6 +54,11 @@ namespace TestBed
         {
             log.Debug(String.Format("Returning device configuration : {0}", _deviceConfig));
             return _deviceConfig;
+        }
+
+        public SequencerConfig getSequencerConfig()
+        {
+            return _sequencerConfig;
         }
     }
 }
