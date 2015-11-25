@@ -59,7 +59,7 @@ namespace TestBed
         {
             _physicalLayer.turnOffOutputs();
             _sequencerLayer.requestStop();
-            //_physicalLayer.stopThreads();
+            _physicalLayer.stopThreads();
             _uiHandle.requestStop();
             Application.Current.Shutdown();
         }
