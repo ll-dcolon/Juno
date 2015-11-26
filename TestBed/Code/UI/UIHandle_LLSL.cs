@@ -89,7 +89,7 @@ namespace TestBed
         /// </summary>
         public void requestStop()
         {
-            log.Info(string.Format("UIHandle_LLSL:{} requesting stop", this));
+            log.Info(string.Format("UIHandle_LLSL:{0} requesting stop", this));
             _shouldStop = true;
             _queueProcessingThread.Join();
         }
