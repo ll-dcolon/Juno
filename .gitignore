@@ -1,4 +1,5 @@
-TestBed/bin/*
 TestBed/obj/*
-TestBedTests/obj/*
+TestBed/bin/*
 .vs/*
+TestBedTests/*
+packages/*
