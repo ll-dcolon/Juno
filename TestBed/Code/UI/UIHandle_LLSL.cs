@@ -92,6 +92,7 @@ namespace TestBed
             log.Info(string.Format("UIHandle_LLSL:{0} requesting stop", this));
             _shouldStop = true;
             _queueProcessingThread.Join();
+            log.Info("Done");
         }
 
 
@@ -125,7 +126,7 @@ namespace TestBed
             {
                 //Get out the newest event
                 log.Debug("Waiting for new event in UIHandle_LLSL processing queue");
-                _enqueueEvent.WaitOne();
+                _enqueueEvent.WaitOne(100);
                 if (_eventQueue.Count() < 1) continue;
                 log.Debug("UIHandle_LLSL processing thread received item enqueued event");
                 Event newEvent;
